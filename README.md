@@ -1,12 +1,58 @@
-# React + Vite
+# 📈 ChamaPro - Table Banking Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![ChamaPro Screenshot](./screenshot.png) *[Add screenshot later]*
 
-Currently, two official plugins are available:
+A modern Progressive Web App (PWA) for Kenyan table banking groups to digitally manage savings, loans, and M-Pesa transactions.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🌟 Key Features
 
-## Expanding the ESLint configuration
+- **Group Financial Management**
+  - Track member contributions and loan repayments
+  - Automated interest calculations
+  - Visualize group savings growth
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Secure Authentication**
+  - Email/password login
+  - Google OAuth integration
+  - Role-based access control
+
+- **M-Pesa Integration**
+  - Sandbox environment for testing
+  - Transaction history tracking
+  - Payment request automation
+
+- **Offline Capabilities**
+  - Works without internet connection
+  - Syncs data when back online
+
+## 🛠️ Tech Stack
+
+| Category       | Technology              |
+|---------------|-------------------------|
+| Frontend      | Vite + React (JSX)      |
+| UI Framework  | Shadcn UI + Tailwind CSS|
+| Backend       | Supabase (PostgreSQL)   |
+| Authentication| Supabase Auth           |
+| Deployment    | Vercel (Frontend)       |
+| CI/CD         | GitHub Actions          |
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js v18+
+- npm v9+
+- Supabase account
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/chamapro.git
+
+# Navigate to project directory
+cd chamapro
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
