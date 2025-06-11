@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "../SupabaseClient";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -14,19 +17,57 @@ const SignUp = () => {
     confirmPassword: "",
   });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-    // TODO: Integrate with Supabase sign up
+    if (!form.role) {
+      setError("Please select a role");
+      return;
+    }
+
+    setLoading(true);
+    // 1. Sign up with Supabase Auth
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+    });
+
+    if (signUpError) {
+      setError(signUpError.message);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Insert profile record
+    const userId = signUpData.user.id;
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        id: userId,
+        full_name: `${form.firstName} ${form.lastName}`,
+        role: form.role,
+        email: form.email,
+      });
+
+    if (profileError) {
+      setError("Could not create user profile");
+      setLoading(false);
+      return;
+    }
+
+    // 3. Redirect to welcome or dashboard
+    navigate("/welcome");
   };
 
   return (
@@ -39,6 +80,7 @@ const SignUp = () => {
           <p className="text-gray-600 text-center mb-6">
             Sign up to join TableBank
           </p>
+
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex gap-3">
               <div className="flex-1">
@@ -62,6 +104,7 @@ const SignUp = () => {
                 />
               </div>
             </div>
+
             <div>
               <Label htmlFor="email">Email Address</Label>
               <Input
@@ -73,6 +116,7 @@ const SignUp = () => {
                 required
               />
             </div>
+
             <div>
               <Label htmlFor="role">Role</Label>
               <select
@@ -86,10 +130,12 @@ const SignUp = () => {
                 <option value="" disabled>
                   Select role
                 </option>
-                <option value="tablebanking">Table Banking</option>
                 <option value="member">Member</option>
+                <option value="group_leader">Group Leader</option>
+                <option value="admin">Administrator</option>
               </select>
             </div>
+
             <div>
               <Label htmlFor="password">Password</Label>
               <Input
@@ -101,6 +147,7 @@ const SignUp = () => {
                 required
               />
             </div>
+
             <div>
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
@@ -112,24 +159,28 @@ const SignUp = () => {
                 required
               />
             </div>
+
             {error && (
               <div className="text-red-600 text-sm text-center">{error}</div>
             )}
+
             <Button
               type="submit"
+              disabled={loading}
               className="w-full bg-[#1F5A3D] hover:bg-[#17432e] text-white font-semibold mt-2"
             >
-              Sign Up
+              {loading ? "Signing Up…" : "Sign Up"}
             </Button>
           </form>
+
           <div className="text-center text-sm mt-4">
             Already have an account?{" "}
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="underline underline-offset-4 text-[#1F5A3D] hover:text-[#17432e]"
             >
               Login
-            </a>
+            </Link>
           </div>
         </CardContent>
       </Card>
