@@ -9,66 +9,31 @@ import { Label } from "@/components/ui/label";
 
 export function LoginForm({ className, ...props }) {
   const navigate = useNavigate();
-  const [email, setEmail]       = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
+    setError(""); // Clear any previous errors
 
-    // 1. Sign in
-    const { data: signInData, error: authError } =
-      await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: signInError } = await supabase.auth.signInWithPassword(
+      {
+        email,
+        password,
+      }
+    );
+    console.log("SIGNIN", { data, error: signInError });
 
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
-    }
-
-    // 2. Get session & user ID
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError || !session) {
-      setError("Could not retrieve session");
-      setLoading(false);
-      return;
-    }
-    const userId = session.user.id;
-
-    // 3. Fetch role from profiles
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
-
-    if (profileError || !profile) {
-      setError("Could not fetch user role");
-      setLoading(false);
-      return;
-    }
-
-    // 4. Redirect based on role
     setLoading(false);
-    switch (profile.role) {
-      case "member":
-        navigate("/dashboards/member");
-        break;
-      case "group_leader":
-        navigate("/dashboards/group-leader");
-        break;
-      case "admin":
-        navigate("/dashboards/admin");
-        break;
-      default:
-        navigate("/");
+
+    if (signInError) {
+      setError(signInError.message || "Login failed");
+    } else {
+      // generic post-login redirect
+      navigate("/dashboard");
     }
   };
 
@@ -175,7 +140,7 @@ export function LoginForm({ className, ...props }) {
 
               {/* Sign-up link */}
               <div className="text-center text-sm mt-2">
-                Don’t have an account?{" "}
+                Don't have an account?{" "}
                 <Link
                   to="/signup"
                   className="underline underline-offset-4 text-[#1F5A3D] hover:text-[#17432e]"
