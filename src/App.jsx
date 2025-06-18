@@ -7,9 +7,11 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 
 import Layout from "./components/Layout";
-import MemberDashboard from "./pages/dashboard/MemberDashboard";
-import GroupLeaderDashboard from "./pages/dashboard/GroupLeaderDashboard";
-import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import MemberDashboard from "./pages/dashboard/member/MemberDashboard";
+import GroupLeaderDashboard from "./pages/dashboard/groupLeader/GroupLeaderDashboard";
+import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
+import Groups from "./pages/dashboard/admin/groups";
+import AdminHome from "./pages/dashboard/admin/AdminHome";
 
 export default function App() {
   const { session, role } = useSession();
@@ -79,6 +81,7 @@ export default function App() {
                     )
                   }
                 />
+                {/* Admin dashboard with nested routes */}
                 <Route
                   path="admin/*"
                   element={
@@ -88,7 +91,11 @@ export default function App() {
                       <Navigate to="/dashboard" replace />
                     )
                   }
-                />
+                >
+                  <Route index element={<AdminHome />} />
+                  <Route path="groups" element={<Groups />} />
+                  {/* Add more admin subpages here if needed */}
+                </Route>
               </Route>
 
               {/* Catch-all for any other logged-in URL */}
