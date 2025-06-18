@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   BanknotesIcon,
   UserGroupIcon,
@@ -10,6 +10,7 @@ import {
   Bars3Icon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion"; // ✅ Added for animations
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -28,8 +29,10 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar } from "@/components/ui/avatar";
 
+
 export default function LandingPage() {
   const [email, setEmail] = useState("");
+  const [scrolled, setScrolled] = useState(false);
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -37,19 +40,31 @@ export default function LandingPage() {
     setEmail("");
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-green-50 text-gray-800">
+
       {/* Navbar */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
+      <header className={`sticky top-0 z-50 transition-all duration-300 ease-in-out ${scrolled ? "bg-green-800 text-white shadow-md" : "bg-white text-green-800 shadow-sm"}`}>
         <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 font-bold text-green-700 text-lg">
-            <BanknotesIcon className="w-6 h-6" /> TableBank
-          </Link>
+          <div className={`flex items-center gap-2 transition-all duration-300 ${scrolled ? "scale-90" : "scale-100"}`}>
+            <Link to="/" className="flex items-center gap-2 font-bold">
+              <BanknotesIcon className="w-6 h-6" />
+              <span className="text-lg">TableBank</span>
+            </Link>
+          </div>
           <nav className="hidden md:flex gap-6 text-sm">
-            <Link to="/login" className="hover:underline">Login</Link>
-            <Link to="/signup" className="hover:underline">Register</Link>
-            <a href="#features" className="hover:underline">Features</a>
-            <a href="#how-it-works" className="hover:underline">How it Works</a>
+            <Link to="/login" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"}`}>Login</Link>
+            <Link to="/signup" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"}`}>Register</Link>
+            <a href="#features" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"}`}>Features</a>
+            <a href="#how-it-works" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"}`}>How it Works</a>
           </nav>
           <Sheet>
             <SheetTrigger asChild>
@@ -68,124 +83,236 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative bg-green-800 text-white py-28 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-tr from-green-900 to-green-600 opacity-80" />
-        <div className="relative z-10 max-w-5xl mx-auto px-6">
-          <h1 className="text-5xl font-extrabold leading-tight">Empower Your Group With Table Banking</h1>
-          <p className="mt-6 text-green-100 text-lg max-w-xl mx-auto">A smarter, transparent, and secure way to manage group savings, loans, and growth.</p>
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
-            <Button size="lg" className="bg-white text-green-800 font-semibold hover:bg-green-100 shadow" asChild>
-              <Link to="/signup">Get Started <ChevronRightIcon className="w-5 h-5 ml-1" /></Link>
-            </Button>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="secondary" size="lg" className="border-white/30 text-white hover:bg-white/10">
-                  <PlayCircleIcon className="w-5 h-5 mr-1" /> See How It Works
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="p-0 overflow-hidden">
-                <iframe
-                  title="Intro Video"
-                  src="https://www.youtube.com/embed/VIDEO_ID"
-                  className="w-full aspect-video"
-                  allow="autoplay; encrypted-media"
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      </section>
+<section className="relative bg-green-800 text-white py-28 overflow-hidden">
+  <div className="absolute inset-0 bg-gradient-to-tr from-green-900 to-green-600 opacity-80" />
+  <div className="relative z-10 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-8 items-center">
+    
+    {/* Left side: Text content */}
+    <div className="text-center md:text-left">
+      <h1 className="text-5xl font-extrabold leading-tight mb-4">
+        Empower Your Group<br />with Table Banking
+      </h1>
+      <p className="mt-4 text-green-100 text-lg max-w-xl">
+        A smarter, transparent, and secure way to manage group savings, loans, and growth.
+      </p>
+      <div className="mt-8 flex flex-wrap md:justify-start justify-center gap-4">
+        <Button
+          size="lg"
+          className="bg-white text-green-800 font-semibold hover:bg-green-100 shadow"
+          asChild
+        >
+          <Link to="/signup">
+            Get Started <ChevronRightIcon className="w-5 h-5 ml-1" />
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          size="lg"
+          className="text-white border border-white/30 hover:bg-white/10"
+          disabled
+        >
+          Learn More
+        </Button>
+      </div>
+    </div>
+
+    {/* Right side: Placeholder for image/carousel */}
+    <div className="hidden md:flex justify-center items-center">
+      <div className="w-full h-64 rounded-xl bg-green-200 bg-opacity-20 flex items-center justify-center text-white border border-white/30 text-sm italic">
+        Image or Slideshow Placeholder
+      </div>
+    </div>
+  </div>
+</section>
+
 
       {/* Features */}
-      <section id="features" className="py-20 px-6">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="text-4xl font-bold text-green-900 text-center mb-10">
-            Why TableBank Stands Out
-          </h2>
-          <Tabs defaultValue="save">
-            <TabsList className="mb-8 flex justify-center gap-4">
-              <TabsTrigger value="save">Save</TabsTrigger>
-              <TabsTrigger value="borrow">Borrow</TabsTrigger>
-              <TabsTrigger value="grow">Grow</TabsTrigger>
-            </TabsList>
-            <TabsContent value="save">
-              <div className="grid md:grid-cols-2 gap-8">
-                <Card className="bg-green-50 hover:bg-green-100 transition shadow-md">
-                  <CardContent className="p-8">
-                    <UserGroupIcon className="w-10 h-10 text-green-700 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">Collective Deposits</h3>
-                    <p className="text-gray-700">Track member contributions with full transparency.</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-green-50 hover:bg-green-100 transition shadow-md">
-                  <CardContent className="p-8">
-                    <ShieldCheckIcon className="w-10 h-10 text-green-700 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">Secure & Verifiable</h3>
-                    <p className="text-gray-700">Backed by Supabase with real-time updates and encryption.</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-            <TabsContent value="borrow">
-              <div className="grid md:grid-cols-2 gap-8">
-                <Card className="bg-green-50 hover:bg-green-100 transition shadow-md">
-                  <CardContent className="p-8">
-                    <BanknotesIcon className="w-10 h-10 text-green-700 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">Instant Loans</h3>
-                    <p className="text-gray-700">No paperwork—members apply and receive funds instantly.</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-green-50 hover:bg-green-100 transition shadow-md">
-                  <CardContent className="p-8">
-                    <ChartPieIcon className="w-10 h-10 text-green-700 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">Transparent Tracking</h3>
-                    <p className="text-gray-700">Follow repayments, interest, and balances in real time.</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-            <TabsContent value="grow">
-              <div className="grid md:grid-cols-2 gap-8">
-                <Card className="bg-green-50 hover:bg-green-100 transition shadow-md">
-                  <CardContent className="p-8">
-                    <ChartPieIcon className="w-10 h-10 text-green-700 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">Group Insights</h3>
-                    <p className="text-gray-700">Visualize progress, analyze impact, and export reports.</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-green-50 hover:bg-green-100 transition shadow-md">
-                  <CardContent className="p-8">
-                    <UserGroupIcon className="w-10 h-10 text-green-700 mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">Community Network</h3>
-                    <p className="text-gray-700">Connect with similar groups and funding partners.</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
+<section id="features" className="py-20 px-6 bg-green-50">
+  <div className="mx-auto max-w-6xl">
+    <p className="text-center text-green-600 mb-2 text-sm uppercase tracking-wider">
+      Built for Savings Groups
+    </p>
+    <h2 className="text-4xl font-bold text-green-900 text-center mb-10">
+      Why TableBank Stands Out
+    </h2>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="py-20 px-6 bg-green-100">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-green-800 mb-8">How It Works</h2>
-          <Accordion type="single" collapsible className="space-y-4">
-            <AccordionItem value="step1">
-              <AccordionTrigger>Step 1: Create or Join a Group</AccordionTrigger>
-              <AccordionContent>Sign up and form a group or join an existing one to start saving.</AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="step2">
-              <AccordionTrigger>Step 2: Start Saving</AccordionTrigger>
-              <AccordionContent>Each member contributes to the group pool on a set schedule.</AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="step3">
-              <AccordionTrigger>Step 3: Borrow and Grow</AccordionTrigger>
-              <AccordionContent>Access funds, repay loans, and monitor growth using real-time tools.</AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-      </section>
+    <Tabs defaultValue="save">
+      <TabsList className="mb-8 flex justify-center gap-4 w-fit mx-auto">
+        <TabsTrigger value="save" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-800 font-medium px-4 py-2 rounded-md">
+          Save
+        </TabsTrigger>
+        <TabsTrigger value="borrow" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-800 font-medium px-4 py-2 rounded-md">
+          Borrow
+        </TabsTrigger>
+        <TabsTrigger value="grow" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-800 font-medium px-4 py-2 rounded-md">
+          Grow
+        </TabsTrigger>
+      </TabsList>
+
+      
+{/* SAVE */}
+<TabsContent value="save">
+  <AnimatePresence mode="wait">
+    <motion.div
+      key="save"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      className="grid md:grid-cols-2 gap-8"
+    >
+      <Card className="transition-all hover:shadow-lg shadow-md bg-white">
+        <CardContent className="p-8">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <UserGroupIcon className="w-6 h-6 text-green-700" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Collective Deposits</h3>
+          <p className="text-gray-700">Track member contributions with full transparency.</p>
+        </CardContent>
+      </Card>
+      <Card className="transition-all hover:shadow-lg shadow-md bg-white">
+        <CardContent className="p-8">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <ShieldCheckIcon className="w-6 h-6 text-green-700" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Secure & Verifiable</h3>
+          <p className="text-gray-700">Backed by Supabase with real-time updates and encryption.</p>
+        </CardContent>
+      </Card>
+    </motion.div>
+  </AnimatePresence>
+</TabsContent>
+
+{/* BORROW */}
+<TabsContent value="borrow">
+  <AnimatePresence mode="wait">
+    <motion.div
+      key="borrow"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      className="grid md:grid-cols-2 gap-8"
+    >
+      <Card className="transition-all hover:shadow-lg shadow-md bg-white">
+        <CardContent className="p-8">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <BanknotesIcon className="w-6 h-6 text-green-700" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Instant Loans</h3>
+          <p className="text-gray-700">No paperwork—members apply and receive funds instantly.</p>
+        </CardContent>
+      </Card>
+      <Card className="transition-all hover:shadow-lg shadow-md bg-white">
+        <CardContent className="p-8">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <ChartPieIcon className="w-6 h-6 text-green-700" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Transparent Tracking</h3>
+          <p className="text-gray-700">Follow repayments, interest, and balances in real time.</p>
+        </CardContent>
+      </Card>
+    </motion.div>
+  </AnimatePresence>
+</TabsContent>
+
+{/* GROW */}
+<TabsContent value="grow">
+  <AnimatePresence mode="wait">
+    <motion.div
+      key="grow"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      className="grid md:grid-cols-2 gap-8"
+    >
+      <Card className="transition-all hover:shadow-lg shadow-md bg-white">
+        <CardContent className="p-8">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <ChartPieIcon className="w-6 h-6 text-green-700" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Group Insights</h3>
+          <p className="text-gray-700">Visualize progress, analyze impact, and export reports.</p>
+        </CardContent>
+      </Card>
+      <Card className="transition-all hover:shadow-lg shadow-md bg-white">
+        <CardContent className="p-8">
+          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+            <UserGroupIcon className="w-6 h-6 text-green-700" />
+          </div>
+          <h3 className="text-xl font-semibold mb-2">Community Network</h3>
+          <p className="text-gray-700">Connect with similar groups and funding partners.</p>
+        </CardContent>
+      </Card>
+    </motion.div>
+  </AnimatePresence>
+</TabsContent>
+
+    </Tabs>
+  </div>
+</section>
+
+{/* HOW IT WORKS */}
+<section id="how-it-works" className="py-24 px-6 bg-green-100">
+  <div className="max-w-4xl mx-auto">
+    <h2 className="text-4xl font-bold text-center text-green-800 mb-4">
+      How It Works
+    </h2>
+    <p className="text-center text-green-700 mb-10 text-base">
+      A 3-step journey to smarter group savings and lending
+    </p>
+
+    <Accordion type="single" collapsible className="space-y-6">
+      {/* Step 1 */}
+      <AccordionItem value="step1" className="rounded-xl bg-white shadow-md p-6 border border-green-200">
+        <AccordionTrigger className="text-xl font-semibold">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-green-700 text-white text-lg flex items-center justify-center">
+              1
+            </div>
+            <span>Create or Join a Group</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="mt-2 text-gray-700 text-sm">
+          Sign up and form a group or join an existing one to start saving.
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* Step 2 */}
+      <AccordionItem value="step2" className="rounded-xl bg-white shadow-md p-6 border border-green-200">
+        <AccordionTrigger className="text-xl font-semibold">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-green-700 text-white text-lg flex items-center justify-center">
+              2
+            </div>
+            <span>Start Saving</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="mt-2 text-gray-700 text-sm">
+          Each member contributes to the group pool on a set schedule.
+        </AccordionContent>
+      </AccordionItem>
+
+      {/* Step 3 */}
+      <AccordionItem value="step3" className="rounded-xl bg-white shadow-md p-6 border border-green-200">
+        <AccordionTrigger className="text-xl font-semibold">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-green-700 text-white text-lg flex items-center justify-center">
+              3
+            </div>
+            <span>Borrow and Grow</span>
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className="mt-2 text-gray-700 text-sm">
+          Access funds, repay loans, and monitor growth using real-time tools.
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  </div>
+</section>
+
+
 
       {/* Testimonials */}
       <section className="py-20 px-6 bg-white">
@@ -255,6 +382,15 @@ export default function LandingPage() {
           <p className="text-xs">&copy; {new Date().getFullYear()} TableBank. All rights reserved.</p>
         </div>
       </footer>
+      {/* Scroll To Top Button */}
+{scrolled && (
+  <button
+    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+    className="fixed bottom-6 right-6 bg-green-700 text-white px-4 py-2 rounded-full shadow-md hover:bg-green-800 transition text-sm font-medium"
+  >
+    Back to Top
+  </button>
+)}
     </div>
   );
 }
