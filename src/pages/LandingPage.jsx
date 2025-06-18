@@ -52,39 +52,39 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col bg-green-50 text-gray-800">
 
       {/* Navbar */}
-      <header className={`sticky top-0 z-50 transition-all duration-300 ease-in-out ${scrolled ? "bg-green-800 text-white shadow-md" : "bg-white text-green-800 shadow-sm"}`}>
-        <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
-          <div className={`flex items-center gap-2 transition-all duration-300 ${scrolled ? "scale-90" : "scale-100"}`}>
-            <Link to="/" className="flex items-center gap-2 font-bold">
-              <BanknotesIcon className="w-6 h-6" />
-              <span className="text-lg">TableBank</span>
-            </Link>
-          </div>
-          <nav className="hidden md:flex gap-6 text-sm">
-            <Link to="/login" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"}`}>Login</Link>
-            <Link to="/signup" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"}`}>Register</Link>
-            <a href="#features" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"}`}>Features</a>
-            <a href="#how-it-works" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"}`}>How it Works</a>
-          </nav>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="ghost" className="md:hidden">
-                <Bars3Icon className="w-5 h-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="p-6 space-y-4">
-              <Link to="/login">Login</Link>
-              <Link to="/signup">Register</Link>
-              <a href="#features">Features</a>
-              <a href="#how-it-works">How it Works</a>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </header>
 
-      {/* Hero Section */}
-<section className="relative bg-green-800 text-white py-28 overflow-hidden">
-  <div className="absolute inset-0 bg-gradient-to-tr from-green-900 to-green-600 opacity-80" />
+<header className={`sticky top-0 z-50 transition-all duration-300 ease-in-out ${scrolled ? "bg-green-900 text-white shadow-md" : "bg-white text-green-800 shadow"}`}>
+  <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+    <div className={`flex items-center gap-2 transition-all duration-300 ${scrolled ? "scale-90" : "scale-100"}`}>
+      <Link to="/" className="flex items-center gap-2 font-bold">
+        <BanknotesIcon className="w-6 h-6" />
+        <span className="text-lg font-bold">TableBank</span>
+      </Link>
+    </div>
+    <nav className="hidden md:flex gap-6 text-sm">
+      <Link to="/login" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"} text-lg font-bold`}>Login</Link>
+      <Link to="/signup" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"} text-lg font-bold`}>Register</Link>
+      <a href="#features" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"} text-lg font-bold`}>Features</a>
+      <a href="#how-it-works" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"} text-lg font-bold`}>How it Works</a>
+    </nav>
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button size="icon" variant="ghost" className="md:hidden">
+          <Bars3Icon className="w-5 h-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="right" className="p-6 space-y-4">
+        <Link to="/login">Login</Link>
+        <Link to="/signup">Register</Link>
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it Works</a>
+      </SheetContent>
+    </Sheet>
+  </div>
+</header>
+
+{/* Hero Section */}
+<section className="relative bg-gradient-to-br from-green-700 to-green-600 text-white py-28 overflow-hidden">
   <div className="relative z-10 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-8 items-center">
     
     {/* Left side: Text content */}
@@ -126,14 +126,15 @@ export default function LandingPage() {
 </section>
 
 
+
       {/* Features */}
 <section id="features" className="py-20 px-6 bg-green-50">
   <div className="mx-auto max-w-6xl">
-    <p className="text-center text-green-600 mb-2 text-sm uppercase tracking-wider">
+    <p className="text-center text-green-600 mb-2 text-base uppercase tracking-wider">
       Built for Savings Groups
     </p>
     <h2 className="text-4xl font-bold text-green-900 text-center mb-10">
-      Why TableBank Stands Out
+      Features
     </h2>
 
     <Tabs defaultValue="save">
@@ -200,7 +201,7 @@ export default function LandingPage() {
             <BanknotesIcon className="w-6 h-6 text-green-700" />
           </div>
           <h3 className="text-xl font-semibold mb-2">Instant Loans</h3>
-          <p className="text-gray-700">No paperwork—members apply and receive funds instantly.</p>
+          <p className="text-gray-700">No paperwork, members apply and receive funds instantly.</p>
         </CardContent>
       </Card>
       <Card className="transition-all hover:shadow-lg shadow-md bg-white">
@@ -251,6 +252,39 @@ export default function LandingPage() {
 
     </Tabs>
   </div>
+<div className="mt-12">
+  <h3 className="text-2xl font-bold text-green-900 text-center mb-6">
+    Why TableBank Stands Out
+  </h3>
+  <div className="grid md:grid-cols-2 gap-8">
+    <Card className="bg-white transition-all hover:shadow-lg shadow-md min-h-[260px]">
+      <CardContent className="p-8">
+        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+          <ShieldCheckIcon className="w-6 h-6 text-green-700" />
+        </div>
+        <h4 className="text-xl font-semibold mb-2">Fingerprint Attendance</h4>
+        <p className="text-gray-700">
+          Our system integrates biometric authentication using a fingerprint sensor module,
+          ensuring that member attendance is secure, accurate, and verifiable.
+        </p>
+      </CardContent>
+    </Card>
+    <Card className="bg-white transition-all hover:shadow-lg shadow-md min-h-[260px]">
+      <CardContent className="p-8">
+        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+          <UserGroupIcon className="w-6 h-6 text-green-700" />
+        </div>
+        <h4 className="text-xl font-semibold mb-2">Why It Matters</h4>
+        <p className="text-gray-700">
+          Fingerprint-based check-ins help prevent impersonation, reduce manual errors,
+          and improve accountability in meetings and transactions, building trust across group members.
+        </p>
+      </CardContent>
+    </Card>
+  </div>
+</div>
+
+
 </section>
 
 {/* HOW IT WORKS */}
@@ -259,8 +293,8 @@ export default function LandingPage() {
     <h2 className="text-4xl font-bold text-center text-green-800 mb-4">
       How It Works
     </h2>
-    <p className="text-center text-green-700 mb-10 text-base">
-      A 3-step journey to smarter group savings and lending
+    <p className="text-center text-green-700 mb-10 text-xl">
+      A simple journey to smarter group savings and lending
     </p>
 
     <Accordion type="single" collapsible className="space-y-6">
@@ -271,7 +305,7 @@ export default function LandingPage() {
             <div className="w-10 h-10 rounded-full bg-green-700 text-white text-lg flex items-center justify-center">
               1
             </div>
-            <span>Create or Join a Group</span>
+            <span className="text-lg">Create or Join a Group</span>
           </div>
         </AccordionTrigger>
         <AccordionContent className="mt-2 text-gray-700 text-sm">
@@ -286,7 +320,7 @@ export default function LandingPage() {
             <div className="w-10 h-10 rounded-full bg-green-700 text-white text-lg flex items-center justify-center">
               2
             </div>
-            <span>Start Saving</span>
+            <span className="text-lg">Start Saving</span>
           </div>
         </AccordionTrigger>
         <AccordionContent className="mt-2 text-gray-700 text-sm">
@@ -301,7 +335,7 @@ export default function LandingPage() {
             <div className="w-10 h-10 rounded-full bg-green-700 text-white text-lg flex items-center justify-center">
               3
             </div>
-            <span>Borrow and Grow</span>
+            <span className="text-lg">Borrow and Grow</span>
           </div>
         </AccordionTrigger>
         <AccordionContent className="mt-2 text-gray-700 text-sm">
@@ -311,6 +345,7 @@ export default function LandingPage() {
     </Accordion>
   </div>
 </section>
+
 
 
 
