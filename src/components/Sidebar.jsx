@@ -16,11 +16,11 @@ import { supabase } from "../SupabaseClient";
 import { sidebarConfig } from "./sidebarConfig";
 
 const DropdownOption = ({ icon: Icon, label, onClick, variant = "default" }) => (
-  <button 
+  <button
     onClick={onClick}
     className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg w-full transition-all duration-200 group ${
-      variant === "danger" 
-        ? "text-red-600 hover:text-red-700 hover:bg-red-50" 
+      variant === "danger"
+        ? "text-red-600 hover:text-red-700 hover:bg-red-50"
         : "text-gray-600 hover:text-[#1F5A3D] hover:bg-[#1F5A3D]/8"
     }`}
   >
@@ -35,8 +35,8 @@ function AccountToggle({ user }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="border-b mb-6 pb-6 border-gray-100">
-      <button 
+    <div className="mb-4">
+      <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex p-3 hover:bg-[#1F5A3D]/8 rounded-xl transition-all duration-200 relative gap-3 w-full items-center group focus:outline-none focus:ring-2 focus:ring-[#1F5A3D]/20"
         aria-expanded={isExpanded}
@@ -66,10 +66,8 @@ function AccountToggle({ user }) {
       {isExpanded && (
         <div className="mt-3 pl-3 space-y-1 animate-in slide-in-from-top-2 duration-200 fade-in-50">
           <DropdownOption icon={FiUser} label="Profile Settings" />
-          <DropdownOption icon={FiSettings} label="Account Settings" />
           <DropdownOption icon={FiHelpCircle} label="Help & Support" />
-          <div className="h-px bg-gray-200 my-2"></div>
-          <DropdownOption icon={FiMoon} label="Dark Mode" />
+          
         </div>
       )}
     </div>
@@ -80,20 +78,13 @@ function NavGroup({ title, items }) {
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="mb-8">
-      {title && (
-        <h3 className="px-4 mb-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          {title}
-        </h3>
-      )}
-      <ul className="space-y-1">
-        {items.map((item) => (
-          <li key={item.path}>
-            <NavItem item={item} />
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="space-y-1">
+      {items.map((item) => (
+        <li key={item.path}>
+          <NavItem item={item} />
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -104,7 +95,7 @@ function NavItem({ item }) {
     <NavLink
       to={path}
       className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-3 rounded-xl mb-2 transition-all duration-200 group relative ${
+        `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
           isActive
             ? "bg-[#1F5A3D] text-white shadow-lg shadow-[#1F5A3D]/25"
             : "bg-white text-gray-700 hover:bg-[#1F5A3D]/5 hover:text-[#1F5A3D]"
@@ -136,7 +127,6 @@ function NavItem({ item }) {
   );
 }
 
-
 export function Sidebar() {
   const { user, role } = useSession();
   const navigate = useNavigate();
@@ -160,7 +150,7 @@ export function Sidebar() {
     <aside className="w-80 fixed top-0 left-0 h-screen bg-white border-r border-gray-200 flex flex-col shadow-xl z-50 overflow-hidden">
       {/* Header */}
       <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 bg-gradient-to-br from-[#1F5A3D] to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg ring-1 ring-black/5">
             <FiCommand className="w-6 h-6 text-white drop-shadow-sm" />
           </div>
@@ -176,7 +166,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
+      <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
         <NavGroup items={mainItems} />
         {managementItems.length > 0 && (
           <NavGroup title="Management" items={managementItems} />

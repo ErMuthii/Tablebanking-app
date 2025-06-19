@@ -1,105 +1,143 @@
 // src/pages/dashboard/member/MyContributions.jsx
-import React from "react";
+import React, { useState } from "react";
 import DataTable from "react-data-table-component";
-import { FiBarChart2, FiTrendingUp, FiTarget, FiCalendar } from "react-icons/fi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useSession } from "@/hooks/useSession";
+import { Input } from "@/components/ui/input";
+import { FiPlusCircle } from "react-icons/fi";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
-const contributions = [
-  { id: 1, date: "2025-06-01", amount: "KES 2,500", method: "MPESA", status: "completed" },
-  { id: 2, date: "2025-05-01", amount: "KES 2,000", method: "MPESA", status: "completed" },
-  { id: 3, date: "2025-04-01", amount: "KES 2,500", method: "MPESA", status: "completed" },
-];
-
-const columns = [
-  { name: "#", selector: (_, i) => i + 1, sortable: true, width: "60px" },
-  { name: "Date", selector: row => row.date, sortable: true },
-  { name: "Amount", selector: row => row.amount, sortable: true },
-  { name: "Method", selector: row => row.method, sortable: true },
-  { name: "Status", selector: row => row.status, sortable: true },
+const contributionHistory = [
+  { id: 1, date: "2025-06-01", amount: 2500, status: "Completed" },
+  { id: 2, date: "2025-05-01", amount: 2000, status: "Completed" },
+  { id: 3, date: "2025-04-01", amount: 1800, status: "Completed" },
 ];
 
 const MyContributions = () => {
-  const { user } = useSession();
-  const totalContributions = 7000;
-  const groupTotal = 28000;
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({ phone: "", amount: "" });
+
+  const total = contributionHistory.reduce((acc, item) => acc + item.amount, 0);
   const goal = 10000;
-  const percentage = Math.round((totalContributions / groupTotal) * 100);
-  const goalProgress = Math.min((totalContributions / goal) * 100, 100);
+  const groupTotal = 40000;
+  const share = ((total / groupTotal) * 100).toFixed(1);
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Processing payment via Daraja:", formData);
+    setDialogOpen(false);
+  };
 
   return (
-    <div className="p-6 space-y-8 bg-gradient-to-br from-white to-gray-100 min-h-screen">
+    <div className={`relative ${dialogOpen ? 'backdrop-blur-2xl transition-all duration-300' : ''} p-6 space-y-6 bg-gradient-to-br from-white to-gray-50 min-h-screen`}>
       <div>
-        <h2 className="text-2xl font-semibold text-gray-800">My Contributions</h2>
-        <p className="text-sm text-gray-600 mt-1">Summary of your personal savings</p>
+        <h1 className="text-2xl font-bold text-gray-800 mb-1">My Contributions</h1>
+        <p className="text-sm text-gray-500">Track and manage your savings contributions</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="shadow-md border">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <FiBarChart2 className="text-[#1F5A3D] w-5 h-5" />
-              <h3 className="font-medium text-gray-700">Total Contributed</h3>
-            </div>
-            <p className="text-2xl font-bold text-gray-800">KES {totalContributions.toLocaleString()}</p>
+      {/* Metrics Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-500">Total Contributed</p>
+            <p className="text-xl font-bold text-green-700">KES {total.toLocaleString()}</p>
           </CardContent>
         </Card>
-
-        <Card className="shadow-md border">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <FiTrendingUp className="text-[#1F5A3D] w-5 h-5" />
-              <h3 className="font-medium text-gray-700">Share of Group Savings</h3>
-            </div>
-            <p className="text-2xl font-bold text-gray-800">{percentage}%</p>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-500">Your Share</p>
+            <p className="text-xl font-bold text-green-700">{share}%</p>
           </CardContent>
         </Card>
-
-        <Card className="shadow-md border">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-3 mb-3">
-              <FiTarget className="text-[#1F5A3D] w-5 h-5" />
-              <h3 className="font-medium text-gray-700">Savings Goal</h3>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-500">Savings Goal</p>
+            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
               <div
-                className="h-2 rounded-full bg-gradient-to-r from-[#1F5A3D] to-emerald-500"
-                style={{ width: `${goalProgress}%` }}
-              />
+                className="h-2 rounded-full bg-gradient-to-r from-[#1F5A3D] to-emerald-600"
+                style={{ width: `${(total / goal) * 100}%` }}
+              ></div>
             </div>
-            <p className="text-sm text-gray-600">KES {totalContributions} / {goal}</p>
+            <p className="text-xs text-gray-500 mt-1">KES {total.toLocaleString()} / {goal.toLocaleString()}</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-lg border">
+      {/* Contribution History Table */}
+      <Card className="border border-gray-200 shadow">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <FiCalendar className="text-[#1F5A3D] w-5 h-5" />
-              <h3 className="text-lg font-semibold text-gray-800">Contribution History</h3>
-            </div>
-            <Button variant="outline" className="text-sm">Export</Button>
+            <h2 className="text-lg font-semibold text-gray-800">Contribution History</h2>
+            <Button
+              onClick={() => setDialogOpen(true)}
+              className="bg-gradient-to-r from-[#1F5A3D] to-emerald-600 text-white hover:from-[#174C30] hover:to-emerald-700"
+            >
+              <FiPlusCircle className="w-4 h-4 mr-2" />
+              New Contribution
+            </Button>
           </div>
           <DataTable
-            columns={columns}
-            data={contributions}
+            columns={[
+              { name: "#", selector: (_, i) => i + 1, width: "60px" },
+              { name: "Date", selector: row => row.date },
+              { name: "Amount (KES)", selector: row => row.amount.toLocaleString() },
+              { name: "Status", selector: row => row.status },
+            ]}
+            data={contributionHistory}
             pagination
             highlightOnHover
-            responsive
+            noHeader
             customStyles={{
               headCells: {
-                style: {
-                  backgroundColor: "#f9fafb",
-                  fontWeight: 600,
-                },
+                style: { backgroundColor: "#f9fafb", fontWeight: 600, fontSize: "14px" },
               },
-              rows: { style: { minHeight: "52px" } },
+              rows: { style: { minHeight: "48px" } },
             }}
           />
         </CardContent>
       </Card>
+
+      {/* Popup Form Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-sm mx-auto bg-white rounded-lg shadow-xl z-50">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">Make Contribution</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              type="tel"
+              name="phone"
+              placeholder="Phone Number"
+              value={formData.phone}
+              onChange={handleFormChange}
+              required
+            />
+            <Input
+              type="text"
+              name="amount"
+              placeholder="Amount (KES)"
+              value={formData.amount}
+              onChange={handleFormChange}
+              required
+              inputMode="numeric"
+              pattern="[0-9]*"
+            />
+            <DialogFooter>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#1F5A3D] to-emerald-600 text-white hover:from-[#174C30] hover:to-emerald-700"
+              >
+                Process Payment
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
