@@ -53,16 +53,18 @@ member: [
         path: "/dashboard/leader/meetings",
         icon: CalendarDaysIcon,
       },
-      {
-        label: "Loans",
-        path: "/dashboard/leader/loans",
-        icon: CurrencyDollarIcon,
-      },
-      {
-        label: "MerryGoRound",
-        path: "/dashboard/leader/merrygo",
-        icon: ArrowPathIcon,
-      },
+{
+  label: "Loans",
+  path: "/dashboard/member/loans",
+  icon: CurrencyDollarIcon,
+},
+
+{
+  label: "Merry-Go-Round",
+  path: "/dashboard/member/merrygo",
+  icon: ArrowPathIcon,
+},
+
       { label: "Welfare", path: "/dashboard/leader/welfare", icon: HeartIcon },
     ],
     // …plus leader-only links

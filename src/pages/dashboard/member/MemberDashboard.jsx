@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 
 const MemberDashboard = () => {
   return (
-    <div>
+    <div className="pl-80">
       <Outlet />
     </div>
   );
