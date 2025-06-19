@@ -12,6 +12,8 @@ import GroupLeaderDashboard from "./pages/dashboard/groupLeader/GroupLeaderDashb
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 import Groups from "./pages/dashboard/admin/groups";
 import AdminHome from "./pages/dashboard/admin/AdminHome";
+import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
+import MemberHome from "./pages/dashboard/member/MemberHome";
 
 export default function App() {
   const { session, role } = useSession();
@@ -61,6 +63,7 @@ export default function App() {
                   }
                 />
 
+                {/* Member dashboard with nested routes */}
                 <Route
                   path="member/*"
                   element={
@@ -70,7 +73,13 @@ export default function App() {
                       <Navigate to="/dashboard" replace />
                     )
                   }
-                />
+                >
+                  <Route index element={<MemberHome />} />
+                 
+                  {/* Add more member subpages here */}
+                </Route>
+
+                {/* Group leader dashboard with nested routes */}
                 <Route
                   path="leader/*"
                   element={
@@ -80,7 +89,12 @@ export default function App() {
                       <Navigate to="/dashboard" replace />
                     )
                   }
-                />
+                >
+                  <Route index element={<GroupHome />} />
+               
+                  {/* Add more group leader subpages here */}
+                </Route>
+
                 {/* Admin dashboard with nested routes */}
                 <Route
                   path="admin/*"

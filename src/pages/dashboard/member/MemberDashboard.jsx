@@ -1,7 +1,12 @@
 import React from "react";
+import { Outlet } from "react-router-dom";
 
 const MemberDashboard = () => {
-  return <div>MemberDashboard</div>;
+  return (
+    <div>
+      <Outlet />
+    </div>
+  );
 };
 
 export default MemberDashboard;

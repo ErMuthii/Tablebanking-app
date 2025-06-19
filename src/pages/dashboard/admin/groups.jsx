@@ -263,7 +263,7 @@ const Groups = () => {
                         <TableCell className="text-right">
                           <div className="flex items-center gap-2 justify-end">
                             {/* View Members Dialog */}
-                            <Dialog>
+                            <Dialog >
                               <DialogTrigger asChild>
                                 <Button
                                   variant="outline"
@@ -278,7 +278,7 @@ const Groups = () => {
                                   View Members
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="max-w-2xl">
+                              <DialogContent className="max-w-2xl bg-gray-200">
                                 <DialogHeader>
                                   <DialogTitle className="text-xl font-semibold text-gray-900">
                                     Members of {selectedGroup?.name}
