@@ -70,7 +70,7 @@ const Meetings = () => {
     <div className="p-6 space-y-8 bg-gradient-to-br from-white to-gray-100 min-h-screen">
       <div className="mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">
-          {user?.email?.split("@")[0] || "Member"}'s Meetings
+          Hello {user?.email?.split("@")[0] || "Member"}
         </h2>
         <p className="text-sm text-gray-600 mt-1">
           Your participation history and upcoming meetings

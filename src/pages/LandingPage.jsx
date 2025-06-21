@@ -10,6 +10,8 @@ import {
   Bars3Icon,
 } from "@heroicons/react/24/outline";
 import { toast } from "sonner";
+import Lottie from "lottie-react";
+import animationData from "@/assets/animations/index1.json"; // ✅ Importing Lottie animation
 import { motion, AnimatePresence } from "framer-motion"; // ✅ Added for animations
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,19 +55,19 @@ export default function LandingPage() {
 
       {/* Navbar */}
 
-<header className={`sticky top-0 z-50 transition-all duration-300 ease-in-out ${scrolled ? "bg-green-900 text-white shadow-md" : "bg-white text-green-800 shadow"}`}>
+<header className="sticky top-0 z-50 bg-green-900 text-white shadow-md transition-all duration-300 ease-in-out">
   <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
-    <div className={`flex items-center gap-2 transition-all duration-300 ${scrolled ? "scale-90" : "scale-100"}`}>
+    <div className="flex items-center gap-2">
       <Link to="/" className="flex items-center gap-2 font-bold">
         <BanknotesIcon className="w-6 h-6" />
         <span className="text-lg font-bold">TableBank</span>
       </Link>
     </div>
     <nav className="hidden md:flex gap-6 text-sm">
-      <Link to="/login" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"} text-lg font-bold`}>Login</Link>
-      <Link to="/signup" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"} text-lg font-bold`}>Register</Link>
-      <a href="#features" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"} text-lg font-bold`}>Features</a>
-      <a href="#how-it-works" className={`hover:underline transition-colors duration-200 ${scrolled ? "text-white" : "text-green-800"} text-lg font-bold`}>How it Works</a>
+      <Link to="/login" className="hover:underline transition-colors duration-200 text-white text-lg font-bold">Login</Link>
+      <Link to="/signup" className="hover:underline transition-colors duration-200 text-white text-lg font-bold">Register</Link>
+      <a href="#features" className="hover:underline transition-colors duration-200 text-white text-lg font-bold">Features</a>
+      <a href="#how-it-works" className="hover:underline transition-colors duration-200 text-white text-lg font-bold">How it Works</a>
     </nav>
     <Sheet>
       <SheetTrigger asChild>
@@ -83,8 +85,9 @@ export default function LandingPage() {
   </div>
 </header>
 
+
 {/* Hero Section */}
-<section className="relative bg-gradient-to-br from-green-700 to-green-600 text-white py-28 overflow-hidden">
+<section className="relative bg-white text-green-800 py-28 overflow-hidden">
   <div className="relative z-10 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-8 items-center">
     
     {/* Left side: Text content */}
@@ -92,13 +95,13 @@ export default function LandingPage() {
       <h1 className="text-5xl font-extrabold leading-tight mb-4">
         Empower Your Group<br />with Table Banking
       </h1>
-      <p className="mt-4 text-green-100 text-lg max-w-xl">
+      <p className="mt-4 text-green-700 text-lg max-w-xl">
         A smarter, transparent, and secure way to manage group savings, loans, and growth.
       </p>
       <div className="mt-8 flex flex-wrap md:justify-start justify-center gap-4">
         <Button
           size="lg"
-          className="bg-white text-green-800 font-semibold hover:bg-green-100 shadow"
+          className="bg-green-800 text-white font-semibold hover:bg-green-700 shadow"
           asChild
         >
           <Link to="/signup">
@@ -108,22 +111,25 @@ export default function LandingPage() {
         <Button
           variant="ghost"
           size="lg"
-          className="text-white border border-white/30 hover:bg-white/10"
-          disabled
+          className="text-green-800 border border-green-300 hover:bg-green-100"
         >
           Learn More
         </Button>
       </div>
     </div>
 
-    {/* Right side: Placeholder for image/carousel */}
+    {/* Right side: Lottie animation */}
     <div className="hidden md:flex justify-center items-center">
-      <div className="w-full h-64 rounded-xl bg-green-200 bg-opacity-20 flex items-center justify-center text-white border border-white/30 text-sm italic">
-        Image or Slideshow Placeholder
-      </div>
+      <Lottie
+        animationData={animationData}
+        loop
+        autoplay
+        className="w-full h-64"
+      />
     </div>
   </div>
 </section>
+
 
 
 

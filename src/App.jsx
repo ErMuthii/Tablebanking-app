@@ -18,6 +18,11 @@ import Meetings from "./pages/dashboard/member/Meetings";
 import Loans from "./pages/dashboard/member/Loans"; // 🔹 NEW
 import MerryGo from "./pages/dashboard/member/merrygo";
 import MyContributions from "./pages/dashboard/member/MyContributions";
+import WelfareFund from "./pages/dashboard/member/WelfareFund";
+import GroupInfo from "./pages/dashboard/member/GroupInfo";
+import ProfileSettings from "./pages/dashboard/member/ProfileSettings";
+import HelpSupport from "./pages/dashboard/member/HelpSupport";
+
 
 // Group Leader Pages
 import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
@@ -84,6 +89,11 @@ export default function App() {
                   <Route path="loans" element={<Loans />} /> {/* 🔹 NEW */}
                   <Route path="merrygo" element={<MerryGo />} />
                   <Route path="contributions" element={<MyContributions />} />
+                  <Route path="welfare" element={<WelfareFund />} />
+                  <Route path="group-info" element={<GroupInfo />} />
+                  <Route path="profile" element={<ProfileSettings />} />
+                  <Route path="help" element={<HelpSupport />} />
+                  
 
                 </Route>
 

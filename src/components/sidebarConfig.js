@@ -17,11 +17,12 @@ member: [
     path: "/dashboard/member/contributions",
     icon: CurrencyDollarIcon,
   },
-  {
-    label: "Loans",
-    path: "/dashboard/member/loans",
-    icon: CurrencyDollarIcon,
-  },
+  
+{
+  label: "Loans",
+  path: "/dashboard/member/loans",
+  icon: CurrencyDollarIcon,
+},
   {
     label: "Merry-Go-Round",
     path: "/dashboard/member/merrygo",
@@ -37,11 +38,13 @@ member: [
     path: "/dashboard/member/meetings",
     icon: CalendarDaysIcon,
   },
-  {
-    label: "Group Info",
-    path: "/dashboard/member/group-info",
-    icon: UsersIcon,
-  },
+{
+  label: "Group Info",
+  path: "/dashboard/member/group-info",
+  icon: UsersIcon // or use InformationCircleIcon
+}
+
+
 ],
 
   group_leader: [
@@ -55,17 +58,21 @@ member: [
       },
 {
   label: "Loans",
-  path: "/dashboard/member/loans",
+  path: "/dashboard/leader/loans",
   icon: CurrencyDollarIcon,
 },
 
 {
   label: "Merry-Go-Round",
-  path: "/dashboard/member/merrygo",
+  path: "/dashboard/leader/merrygo",
   icon: ArrowPathIcon,
 },
 
-      { label: "Welfare", path: "/dashboard/leader/welfare", icon: HeartIcon },
+{
+  title: "Welfare Fund",
+  path: "/dashboard/leader/welfare-fund",
+  icon: "HeartIcon" // or any other icon you're using from lucide-react
+},
     ],
     // …plus leader-only links
     {
