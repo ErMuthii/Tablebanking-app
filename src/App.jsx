@@ -14,6 +14,8 @@ import Groups from "./pages/dashboard/admin/groups";
 import AdminHome from "./pages/dashboard/admin/AdminHome";
 import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
 import MemberHome from "./pages/dashboard/member/MemberHome";
+import Membership from "./pages/dashboard/groupLeader/Membership";
+import Loans from "./pages/dashboard/groupLeader/Loans";
 
 export default function App() {
   const { session, role } = useSession();
@@ -75,7 +77,7 @@ export default function App() {
                   }
                 >
                   <Route index element={<MemberHome />} />
-                 
+
                   {/* Add more member subpages here */}
                 </Route>
 
@@ -91,7 +93,9 @@ export default function App() {
                   }
                 >
                   <Route index element={<GroupHome />} />
-               
+                  <Route path="membership" element={<Membership />} />
+                  <Route path="loans" element={<Loans />} />
+
                   {/* Add more group leader subpages here */}
                 </Route>
 
