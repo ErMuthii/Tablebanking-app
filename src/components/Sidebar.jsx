@@ -16,11 +16,16 @@ import { sidebarConfig } from "./sidebarConfig";
 const DropdownOption = ({ icon: Icon, label, to, variant = "default" }) => (
   <NavLink
     to={to}
-    className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg w-full transition-all duration-200 group ${
-      variant === "danger"
-        ? "text-red-600 hover:text-red-700 hover:bg-red-50"
-        : "text-gray-600 hover:text-[#1F5A3D] hover:bg-[#1F5A3D]/8"
-    }`}
+    end
+    className={({ isActive }) =>
+      `flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg w-full transition-all duration-200 group ${
+        variant === "danger"
+          ? "text-red-600 hover:text-red-700 hover:bg-red-50"
+          : isActive
+          ? "bg-[#1F5A3D]/10 text-[#1F5A3D] font-semibold"
+          : "text-gray-600 hover:text-[#1F5A3D] hover:bg-[#1F5A3D]/8"
+      }`
+    }
   >
     <Icon
       className={`w-4 h-4 transition-transform group-hover:scale-105 ${
@@ -102,6 +107,7 @@ function NavItem({ item }) {
   return (
     <NavLink
       to={path}
+      end
       className={({ isActive }) =>
         `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${
           isActive
