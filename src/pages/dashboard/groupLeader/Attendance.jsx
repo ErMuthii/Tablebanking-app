@@ -30,10 +30,30 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 
 const attendanceStatuses = [
-  { value: "present", label: "Present", color: "bg-emerald-100 text-emerald-700 border-emerald-200", activeColor: "bg-emerald-500 text-white" },
-  { value: "absent", label: "Absent", color: "bg-red-100 text-red-700 border-red-200", activeColor: "bg-red-500 text-white" },
-  { value: "late", label: "Late", color: "bg-amber-100 text-amber-700 border-amber-200", activeColor: "bg-amber-500 text-white" },
-  { value: "pending", label: "Pending", color: "bg-gray-100 text-gray-700 border-gray-200", activeColor: "bg-gray-500 text-white" },
+  {
+    value: "present",
+    label: "Present",
+    color: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    activeColor: "bg-emerald-500 text-white",
+  },
+  {
+    value: "absent",
+    label: "Absent",
+    color: "bg-red-100 text-red-700 border-red-200",
+    activeColor: "bg-red-500 text-white",
+  },
+  {
+    value: "late",
+    label: "Late",
+    color: "bg-amber-100 text-amber-700 border-amber-200",
+    activeColor: "bg-amber-500 text-white",
+  },
+  {
+    value: "pending",
+    label: "Pending",
+    color: "bg-gray-100 text-gray-700 border-gray-200",
+    activeColor: "bg-gray-500 text-white",
+  },
 ];
 
 const AttendancePage = () => {
@@ -120,20 +140,27 @@ const AttendancePage = () => {
         return;
       }
       // 2. Check if meeting exists for this date
+      const date = format(selectedDate, "yyyy-MM-dd");
       const { data: meeting, error: meetingError } = await supabase
         .from("meetings")
         .select("id")
         .eq("group_id", groupData.id)
-        .eq("meeting_date", format(selectedDate, "yyyy-MM-dd"))
+        .gte("starts_at", `${date}T00:00:00.000Z`)
+        .lte("starts_at", `${date}T23:59:59.999Z`)
         .maybeSingle();
+
       let meetingId = meeting?.id;
       if (!meetingId) {
-        // Create meeting
+        // Create meeting if none is scheduled - useful for ad-hoc meetings
+        toast.info(
+          "No meeting was scheduled for this date. Creating an ad-hoc meeting record."
+        );
         const { data: newMeeting, error: createMeetingError } = await supabase
           .from("meetings")
           .insert({
             group_id: groupData.id,
-            meeting_date: format(selectedDate, "yyyy-MM-dd"),
+            starts_at: selectedDate.toISOString(),
+            location: "Ad-hoc Meeting", // Default location
             created_by: user.id,
           })
           .select()
@@ -187,7 +214,7 @@ const AttendancePage = () => {
               Track member attendance for your table banking group
             </p>
           </div>
-          
+
           {/* Enhanced Date Picker */}
           <div className="relative">
             <Button
@@ -229,8 +256,12 @@ const AttendancePage = () => {
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-600">Total Members</div>
-                <div className="text-2xl font-bold text-gray-900">{totalMembers}</div>
+                <div className="text-sm font-medium text-gray-600">
+                  Total Members
+                </div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {totalMembers}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -242,7 +273,9 @@ const AttendancePage = () => {
               </div>
               <div>
                 <div className="text-sm font-medium text-gray-600">Present</div>
-                <div className="text-2xl font-bold text-emerald-600">{present}</div>
+                <div className="text-2xl font-bold text-emerald-600">
+                  {present}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -277,8 +310,12 @@ const AttendancePage = () => {
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
               <div>
-                <div className="text-sm font-medium text-white/90">Attendance Rate</div>
-                <div className="text-2xl font-bold text-white">{attendanceRate}%</div>
+                <div className="text-sm font-medium text-white/90">
+                  Attendance Rate
+                </div>
+                <div className="text-2xl font-bold text-white">
+                  {attendanceRate}%
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -294,15 +331,15 @@ const AttendancePage = () => {
           <CardContent>
             <Tabs value={tab} onValueChange={setTab} className="w-full">
               <TabsList className="mb-6 w-full bg-gray-100 p-1">
-                <TabsTrigger 
-                  value="manual" 
+                <TabsTrigger
+                  value="manual"
                   className="flex-1 data-[state=active]:bg-[#1F5A3D] data-[state=active]:text-white font-medium"
                 >
                   <Users className="w-4 h-4 mr-2" />
                   Manual Entry
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="fingerprint" 
+                <TabsTrigger
+                  value="fingerprint"
                   className="flex-1 data-[state=active]:bg-[#1F5A3D] data-[state=active]:text-white font-medium"
                 >
                   <Fingerprint className="w-4 h-4 mr-2" />
@@ -333,11 +370,12 @@ const AttendancePage = () => {
                   ) : (
                     filteredMembers.map((member) => {
                       const status = attendance[member.id] || "pending";
-                      const initials = member.profiles?.full_name
-                        ?.split(" ")
-                        .map((n) => n[0])
-                        .join("") || "?";
-                      
+                      const initials =
+                        member.profiles?.full_name
+                          ?.split(" ")
+                          .map((n) => n[0])
+                          .join("") || "?";
+
                       return (
                         <div
                           key={member.id}
@@ -353,7 +391,7 @@ const AttendancePage = () => {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             {attendanceStatuses.map((s) => (
                               <Button
@@ -363,7 +401,8 @@ const AttendancePage = () => {
                                 variant="outline"
                                 className={`rounded-lg px-4 py-2 font-medium transition-all ${
                                   status === s.value
-                                    ? s.activeColor + " border-transparent shadow-sm"
+                                    ? s.activeColor +
+                                      " border-transparent shadow-sm"
                                     : s.color + " border hover:bg-opacity-80"
                                 }`}
                                 onClick={() =>
@@ -410,9 +449,13 @@ const AttendancePage = () => {
                     Ready to Scan
                   </h3>
                   <p className="text-gray-600 mb-8 text-center max-w-md">
-                    Place your finger on the scanner to mark attendance automatically
+                    Place your finger on the scanner to mark attendance
+                    automatically
                   </p>
-                  <Button size="lg" className="bg-[#1F5A3D] hover:bg-[#2d7a56] text-white h-12 px-8">
+                  <Button
+                    size="lg"
+                    className="bg-[#1F5A3D] hover:bg-[#2d7a56] text-white h-12 px-8"
+                  >
                     <Fingerprint className="w-5 h-5 mr-2" />
                     Start Scan
                   </Button>

@@ -26,13 +26,15 @@ import HelpSupport from "./pages/dashboard/member/HelpSupport";
 
 // Group Leader Pages
 import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
-import Membership from "./pages/dashboard/groupLeader/Membership";
 import GroupLeaderLoans from "./pages/dashboard/groupLeader/GroupLeaderLoans";
 import AttendancePage from "./pages/dashboard/groupLeader/Attendance";
+import GroupLeaderMeetings from "./pages/dashboard/groupLeader/GroupLeaderMeetings";
+import Membership from "./pages/dashboard/groupLeader/Membership";
 
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
 import Groups from "./pages/dashboard/admin/groups";
+
 
 export default function App() {
   const { session, role } = useSession();
@@ -112,10 +114,10 @@ export default function App() {
                   }
                 >
                   <Route index element={<GroupHome />} />
-
                   <Route path="membership" element={<Membership />} />
                   <Route path="loans" element={<GroupLeaderLoans />} />
                   <Route path="attendance" element={<AttendancePage />} />
+                  <Route path="meetings" element={<GroupLeaderMeetings />} />
                 </Route>
 
                 {/* Admin Dashboard Routes */}
