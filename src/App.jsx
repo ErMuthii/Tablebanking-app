@@ -28,6 +28,7 @@ import HelpSupport from "./pages/dashboard/member/HelpSupport";
 import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
 import Membership from "./pages/dashboard/groupLeader/Membership";
 import GroupLeaderLoans from "./pages/dashboard/groupLeader/GroupLeaderLoans";
+import AttendancePage from "./pages/dashboard/groupLeader/Attendance";
 
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
@@ -114,6 +115,7 @@ export default function App() {
 
                   <Route path="membership" element={<Membership />} />
                   <Route path="loans" element={<GroupLeaderLoans />} />
+                  <Route path="attendance" element={<AttendancePage />} />
                 </Route>
 
                 {/* Admin Dashboard Routes */}

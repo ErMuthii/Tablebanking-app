@@ -7,45 +7,45 @@ import {
   UsersIcon,
   ChartBarIcon,
   UserGroupIcon,
+  CheckBadgeIcon,
+  ArrowTrendingUpIcon,
 } from "@heroicons/react/24/outline";
 
 export const sidebarConfig = {
-member: [
-  { label: "Home", path: "/dashboard/member", icon: HomeIcon },
-  {
-    label: "My Contributions",
-    path: "/dashboard/member/contributions",
-    icon: CurrencyDollarIcon,
-  },
-  
-{
-  label: "Loans",
-  path: "/dashboard/member/loans",
-  icon: CurrencyDollarIcon,
-},
-  {
-    label: "Merry-Go-Round",
-    path: "/dashboard/member/merrygo",
-    icon: ArrowPathIcon,
-  },
-  {
-    label: "Welfare Fund",
-    path: "/dashboard/member/welfare",
-    icon: HeartIcon,
-  },
-  {
-    label: "Meetings",
-    path: "/dashboard/member/meetings",
-    icon: CalendarDaysIcon,
-  },
-{
-  label: "Group Info",
-  path: "/dashboard/member/group-info",
-  icon: UsersIcon // or use InformationCircleIcon
-}
+  member: [
+    { label: "Home", path: "/dashboard/member", icon: HomeIcon },
+    {
+      label: "My Contributions",
+      path: "/dashboard/member/contributions",
+      icon: CurrencyDollarIcon,
+    },
 
-
-],
+    {
+      label: "Loans",
+      path: "/dashboard/member/loans",
+      icon: CurrencyDollarIcon,
+    },
+    {
+      label: "Merry-Go-Round",
+      path: "/dashboard/member/merrygo",
+      icon: ArrowPathIcon,
+    },
+    {
+      label: "Welfare Fund",
+      path: "/dashboard/member/welfare",
+      icon: HeartIcon,
+    },
+    {
+      label: "Meetings",
+      path: "/dashboard/member/meetings",
+      icon: CalendarDaysIcon,
+    },
+    {
+      label: "Group Info",
+      path: "/dashboard/member/group-info",
+      icon: UsersIcon, // or use InformationCircleIcon
+    },
+  ],
 
   group_leader: [
     // start with everything a member sees…
@@ -54,33 +54,44 @@ member: [
       {
         label: "Meetings",
         path: "/dashboard/leader/meetings",
-        icon: CalendarDaysIcon,
+        icon: UsersIcon,
       },
-{
-  label: "Loans",
-  path: "/dashboard/leader/loans",
-  icon: CurrencyDollarIcon,
-},
+      {
+        label: "Loans",
+        path: "/dashboard/leader/loans",
+        icon: CurrencyDollarIcon,
+      },
 
-{
-  label: "Merry-Go-Round",
-  path: "/dashboard/leader/merrygo",
-  icon: ArrowPathIcon,
-},
+      {
+        label: "Merry-Go-Round",
+        path: "/dashboard/leader/merry-go-round",
+        icon: ArrowTrendingUpIcon,
+      },
 
-{
-  title: "Welfare Fund",
-  path: "/dashboard/leader/welfare-fund",
-  icon: "HeartIcon" // or any other icon you're using from lucide-react
-},
+      {
+        title: "Welfare Fund",
+        path: "/dashboard/leader/welfare-fund",
+        icon: "HeartIcon", // or any other icon you're using from lucide-react
+      },
     ],
     // …plus leader-only links
     {
       label: "Membership",
       path: "/dashboard/leader/membership",
       icon: UsersIcon,
+      group: "management",
     },
-    { label: "Reports", path: "/dashboard/leader/reports", icon: ChartBarIcon },
+    {
+      label: "Attendance",
+      path: "/dashboard/leader/attendance",
+      icon: CheckBadgeIcon,
+      group: "management",
+    },
+    {
+      label: "Reports",
+      path: "/dashboard/leader/reports",
+      icon: ChartBarIcon,
+    },
   ],
 
   admin: [

@@ -71,29 +71,31 @@ export const JoinGroup = ({ onGroupJoined }) => {
   };
 
   return (
-    <div className="flex items-center justify-center h-full p-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Join a Group</CardTitle>
-          <CardDescription>
-            Enter the invite code provided by your group leader to join.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleJoinGroup} className="space-y-4">
-            <Input
-              placeholder="Enter invite code"
-              value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-              disabled={loading}
-              maxLength="6"
-            />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Joining Group..." : "Join Group"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="bg-green-50 min-h-screen py-8">
+      <div className="max-w-2xl mx-auto">
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Join a Group</CardTitle>
+            <CardDescription>
+              Enter the invite code provided by your group leader to join.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleJoinGroup} className="space-y-4">
+              <Input
+                placeholder="Enter invite code"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                disabled={loading}
+                maxLength="6"
+              />
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Joining Group..." : "Join Group"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

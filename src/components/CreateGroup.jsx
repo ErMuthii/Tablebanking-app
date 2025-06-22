@@ -54,28 +54,30 @@ export const CreateGroup = ({ onGroupCreated }) => {
   };
 
   return (
-    <div className="flex items-center justify-center h-full p-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Create Your Group</CardTitle>
-          <CardDescription>
-            You don't have a group yet. Create one to get started.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreateGroup} className="space-y-4">
-            <Input
-              placeholder="Enter your group's name"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              disabled={loading}
-            />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating Group..." : "Create Group"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="bg-green-50 min-h-screen py-8">
+      <div className="max-w-2xl mx-auto">
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Create Your Group</CardTitle>
+            <CardDescription>
+              You don't have a group yet. Create one to get started.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreateGroup} className="space-y-4">
+              <Input
+                placeholder="Enter your group's name"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                disabled={loading}
+              />
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Creating Group..." : "Create Group"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
