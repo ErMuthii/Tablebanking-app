@@ -24,7 +24,7 @@ const columns = [
   },
 ];
 
-const Loans = () => {
+const GroupMemberLoans = () => {
   const { user } = useSession();
 
   return (
@@ -75,4 +75,4 @@ const Loans = () => {
   );
 };
 
-export default Loans;
+export default GroupMemberLoans;
