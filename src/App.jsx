@@ -97,12 +97,9 @@ export default function App() {
                   <Route path="welfare" element={<WelfareFund />} />
                   <Route path="group-info" element={<GroupInfo />} />
                   <Route path="profile" element={<ProfileSettings />} />
-                  <Route path="help" element={<HelpSupport />} />
-                  
-
-
-                  {/* Add more member subpages here */
-                </Route>
+                    <Route path="help" element={<HelpSupport />} />
+                    {/* Add more member subpages here */}
+                  </Route>
 
                 {/* Group Leader Dashboard Routes */}
                 <Route
