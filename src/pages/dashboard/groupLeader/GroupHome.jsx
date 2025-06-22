@@ -1,8 +1,45 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/SupabaseClient";
+import { useSession } from "@/hooks/useSession";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FiArrowUpRight, FiArrowDownRight } from "react-icons/fi";
+import { FiArrowUpRight, FiArrowDownRight, FiUsers } from "react-icons/fi";
+import { CreateGroup } from "@/components/CreateGroup";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const GroupHome = () => {
+  const { user } = useSession();
+  const [group, setGroup] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGroup = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("groups")
+        .select("*")
+        .eq("created_by", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching group:", error);
+      } else {
+        setGroup(data);
+      }
+      setLoading(false);
+    };
+
+    fetchGroup();
+  }, [user]);
+
+  const handleGroupCreated = (newGroup) => {
+    setGroup(newGroup);
+  };
+
   const today = new Date();
   const options = {
     weekday: "long",
@@ -12,17 +49,52 @@ const GroupHome = () => {
   };
   const formattedDate = today.toLocaleDateString("en-US", options);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full p-8">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!group) {
+    return <CreateGroup onGroupCreated={handleGroupCreated} />;
+  }
+
   return (
     <div className="p-8 bg-white min-h-screen rounded-lg pb-4 shadow">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Good morning, Group Leader!
+            Welcome to {group.name}!
           </h1>
           <div className="text-gray-500">{formattedDate}</div>
         </div>
-        {/* Placeholder for date range picker if needed later */}
+        {group.invite_code && (
+          <Card>
+            <CardContent className="p-4 flex items-center gap-4">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">
+                  Group Invite Code
+                </p>
+                <p className="text-2xl font-bold tracking-widest text-[#1F5A3D]">
+                  {group.invite_code}
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  navigator.clipboard.writeText(group.invite_code);
+                  toast.success("Invite code copied to clipboard!");
+                }}
+                variant="outline"
+                size="sm"
+              >
+                Copy
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Summary Cards */}

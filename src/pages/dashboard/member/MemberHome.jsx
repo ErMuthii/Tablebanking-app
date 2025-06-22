@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -25,6 +25,9 @@ import {
   FiDownload,
   FiSend,
 } from "react-icons/fi";
+import { supabase } from "@/SupabaseClient";
+import { useSession } from "@/hooks/useSession";
+import { JoinGroup } from "@/components/JoinGroup";
 
 // Sample data with more realistic financial group context
 const savingsData = [
@@ -37,101 +40,119 @@ const savingsData = [
 ];
 
 const transactions = [
-  { id: 1, type: "Monthly Contribution", amount: "KES 2,500", date: "2025-06-01", status: "completed" },
-  { id: 2, type: "Loan Repayment", amount: "KES 800", date: "2025-06-10", status: "completed" },
-  { id: 3, type: "Emergency Fund", amount: "KES 200", date: "2025-06-15", status: "pending" },
+  {
+    id: 1,
+    type: "Monthly Contribution",
+    amount: "KES 2,500",
+    date: "2025-06-01",
+    status: "completed",
+  },
+  {
+    id: 2,
+    type: "Loan Repayment",
+    amount: "KES 800",
+    date: "2025-06-10",
+    status: "completed",
+  },
+  {
+    id: 3,
+    type: "Emergency Fund",
+    amount: "KES 200",
+    date: "2025-06-15",
+    status: "pending",
+  },
 ];
 
 // Enhanced dashboard metrics with trend data
 const dashboardMetrics = [
   {
-    id: 'contributions',
-    title: 'Total Contributions',
+    id: "contributions",
+    title: "Total Contributions",
     value: 18000,
-    currency: 'KES',
-    trend: { value: 12.5, direction: 'up' },
+    currency: "KES",
+    trend: { value: 12.5, direction: "up" },
     icon: FiDollarSign,
-    gradient: 'from-emerald-500 to-teal-600',
-    bgGradient: 'from-emerald-50 to-teal-50',
+    gradient: "from-emerald-500 to-teal-600",
+    bgGradient: "from-emerald-50 to-teal-50",
     progress: { current: 18000, target: 25000 },
     actions: [
-      { label: 'Add Contribution', icon: FiPlus, action: 'contribute' },
-      { label: 'View History', icon: FiEye, action: 'view' }
-    ]
+      { label: "Add Contribution", icon: FiPlus, action: "contribute" },
+      { label: "View History", icon: FiEye, action: "view" },
+    ],
   },
   {
-    id: 'loans',
-    title: 'Active Loans',
+    id: "loans",
+    title: "Active Loans",
     value: 5000,
-    currency: 'KES',
-    trend: { value: 8.2, direction: 'down' },
+    currency: "KES",
+    trend: { value: 8.2, direction: "down" },
     icon: FiCreditCard,
-    gradient: 'from-blue-500 to-indigo-600',
-    bgGradient: 'from-blue-50 to-indigo-50',
-    progress: { current: 5000, target: 15000, label: 'Available Credit' },
+    gradient: "from-blue-500 to-indigo-600",
+    bgGradient: "from-blue-50 to-indigo-50",
+    progress: { current: 5000, target: 15000, label: "Available Credit" },
     actions: [
-      { label: 'Apply for Loan', icon: FiPlus, action: 'loan' },
-      { label: 'Repay', icon: FiSend, action: 'repay' }
-    ]
+      { label: "Apply for Loan", icon: FiPlus, action: "loan" },
+      { label: "Repay", icon: FiSend, action: "repay" },
+    ],
   },
   {
-    id: 'savings',
-    title: 'Savings Rate',
+    id: "savings",
+    title: "Savings Rate",
     value: 85,
-    suffix: '%',
-    trend: { value: 5.3, direction: 'up' },
+    suffix: "%",
+    trend: { value: 5.3, direction: "up" },
     icon: FiTarget,
-    gradient: 'from-purple-500 to-pink-600',
-    bgGradient: 'from-purple-50 to-pink-50',
+    gradient: "from-purple-500 to-pink-600",
+    bgGradient: "from-purple-50 to-pink-50",
     progress: { current: 85, target: 100 },
     actions: [
-      { label: 'Set Goal', icon: FiTarget, action: 'goal' },
-      { label: 'View Breakdown', icon: FiActivity, action: 'breakdown' }
-    ]
+      { label: "Set Goal", icon: FiTarget, action: "goal" },
+      { label: "View Breakdown", icon: FiActivity, action: "breakdown" },
+    ],
   },
   {
-    id: 'attendance',
-    title: 'Meeting Attendance',
+    id: "attendance",
+    title: "Meeting Attendance",
     value: 92,
-    suffix: '%',
-    trend: { value: 3.1, direction: 'up' },
+    suffix: "%",
+    trend: { value: 3.1, direction: "up" },
     icon: FiUsers,
-    gradient: 'from-orange-500 to-red-600',
-    bgGradient: 'from-orange-50 to-red-50',
-    progress: { current: 11, target: 12, label: 'Meetings Attended' },
+    gradient: "from-orange-500 to-red-600",
+    bgGradient: "from-orange-50 to-red-50",
+    progress: { current: 11, target: 12, label: "Meetings Attended" },
     actions: [
-      { label: 'Next Meeting', icon: FiCalendar, action: 'meeting' },
-      { label: 'View Schedule', icon: FiEye, action: 'schedule' }
-    ]
+      { label: "Next Meeting", icon: FiCalendar, action: "meeting" },
+      { label: "View Schedule", icon: FiEye, action: "schedule" },
+    ],
   },
   {
-    id: 'nextMeeting',
-    title: 'Next Meeting',
-    value: '25th June, 2025',
-    subtitle: 'In 6 days',
+    id: "nextMeeting",
+    title: "Next Meeting",
+    value: "25th June, 2025",
+    subtitle: "In 6 days",
     icon: FiCalendar,
-    gradient: 'from-teal-500 to-cyan-600',
-    bgGradient: 'from-teal-50 to-cyan-50',
+    gradient: "from-teal-500 to-cyan-600",
+    bgGradient: "from-teal-50 to-cyan-50",
     actions: [
-      { label: 'Add to Calendar', icon: FiPlus, action: 'calendar' },
-      { label: 'View Agenda', icon: FiEye, action: 'agenda' }
-    ]
+      { label: "Add to Calendar", icon: FiPlus, action: "calendar" },
+      { label: "View Agenda", icon: FiEye, action: "agenda" },
+    ],
   },
   {
-    id: 'loanUtilization',
-    title: 'Loan Utilization',
+    id: "loanUtilization",
+    title: "Loan Utilization",
     value: 33,
-    suffix: '%',
-    trend: { value: 2.1, direction: 'down' },
+    suffix: "%",
+    trend: { value: 2.1, direction: "down" },
     icon: FiActivity,
-    gradient: 'from-indigo-500 to-purple-600',
-    bgGradient: 'from-indigo-50 to-purple-50',
-    progress: { current: 5000, target: 15000, label: 'of available credit' },
+    gradient: "from-indigo-500 to-purple-600",
+    bgGradient: "from-indigo-50 to-purple-50",
+    progress: { current: 5000, target: 15000, label: "of available credit" },
     actions: [
-      { label: 'Loan Calculator', icon: FiActivity, action: 'calculator' },
-      { label: 'Terms', icon: FiEye, action: 'terms' }
-    ]
-  }
+      { label: "Loan Calculator", icon: FiActivity, action: "calculator" },
+      { label: "Terms", icon: FiEye, action: "terms" },
+    ],
+  },
 ];
 
 // Metric Card Component
@@ -147,7 +168,7 @@ const MetricCard = React.memo(({ metric, onAction }) => {
     gradient,
     bgGradient,
     progress,
-    actions
+    actions,
   } = metric;
 
   const [isHovered, setIsHovered] = useState(false);
@@ -156,33 +177,40 @@ const MetricCard = React.memo(({ metric, onAction }) => {
     if (currency) {
       return `${currency} ${val.toLocaleString()}`;
     }
-    return typeof val === 'number' ? val.toLocaleString() : val;
+    return typeof val === "number" ? val.toLocaleString() : val;
   };
 
-  const TrendIcon = trend?.direction === 'up' ? FiTrendingUp : FiTrendingDown;
-  const trendColor = trend?.direction === 'up' ? 'text-emerald-600' : 'text-red-600';
-  const trendBg = trend?.direction === 'up' ? 'bg-emerald-100' : 'bg-red-100';
+  const TrendIcon = trend?.direction === "up" ? FiTrendingUp : FiTrendingDown;
+  const trendColor =
+    trend?.direction === "up" ? "text-emerald-600" : "text-red-600";
+  const trendBg = trend?.direction === "up" ? "bg-emerald-100" : "bg-red-100";
 
   return (
-    <Card 
+    <Card
       className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer group ${
-        isHovered ? 'shadow-2xl' : 'shadow-lg'
+        isHovered ? "shadow-2xl" : "shadow-lg"
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-50`} />
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-50`}
+      />
       <CardContent className="relative p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-lg`}>
+            <div
+              className={`p-3 rounded-xl bg-gradient-to-br ${gradient} shadow-lg`}
+            >
               <Icon className="w-6 h-6 text-white" />
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-600">{title}</h3>
               {trend && (
-                <div className={`flex items-center gap-1 mt-1 px-2 py-1 rounded-full ${trendBg} w-fit`}>
+                <div
+                  className={`flex items-center gap-1 mt-1 px-2 py-1 rounded-full ${trendBg} w-fit`}
+                >
                   <TrendIcon className={`w-3 h-3 ${trendColor}`} />
                   <span className={`text-xs font-semibold ${trendColor}`}>
                     {trend.value}%
@@ -196,25 +224,30 @@ const MetricCard = React.memo(({ metric, onAction }) => {
         {/* Value */}
         <div className="mb-4">
           <p className="text-2xl font-bold text-gray-900">
-            {formatValue(value)}{suffix}
+            {formatValue(value)}
+            {suffix}
           </p>
-          {subtitle && (
-            <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
         </div>
 
         {/* Progress Bar */}
         {progress && (
           <div className="mb-4">
             <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>{progress.label || 'Progress'}</span>
-              <span>{progress.current.toLocaleString()} / {progress.target.toLocaleString()}</span>
+              <span>{progress.label || "Progress"}</span>
+              <span>
+                {progress.current.toLocaleString()} /{" "}
+                {progress.target.toLocaleString()}
+              </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className={`h-2 rounded-full bg-gradient-to-r ${gradient} transition-all duration-500`}
                 style={{
-                  width: `${Math.min((progress.current / progress.target) * 100, 100)}%`
+                  width: `${Math.min(
+                    (progress.current / progress.target) * 100,
+                    100
+                  )}%`,
                 }}
               />
             </div>
@@ -222,9 +255,11 @@ const MetricCard = React.memo(({ metric, onAction }) => {
         )}
 
         {/* Actions */}
-        <div className={`flex gap-2 transition-all duration-300 ${
-          isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-        }`}>
+        <div
+          className={`flex gap-2 transition-all duration-300 ${
+            isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+          }`}
+        >
           {actions?.map((action, index) => (
             <Button
               key={index}
@@ -244,24 +279,68 @@ const MetricCard = React.memo(({ metric, onAction }) => {
 });
 
 const MemberHome = () => {
-  const [message, setMessage] = useState('');
+  const { user } = useSession();
+  const [groupMembership, setGroupMembership] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkGroupMembership = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("group_members")
+        .select("id")
+        .eq("member_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking group membership:", error);
+      } else {
+        setGroupMembership(data);
+      }
+      setLoading(false);
+    };
+
+    checkGroupMembership();
+  }, [user]);
+
+  const handleGroupJoined = (newMembership) => {
+    setGroupMembership(newMembership);
+  };
+
+  const [message, setMessage] = useState("");
 
   // Memoized calculations for performance
   const chartData = useMemo(() => savingsData, []);
   const recentTransactions = useMemo(() => transactions.slice(0, 3), []);
 
   const handleAction = (metricId, action) => {
-    console.log(`Action: ${action} for metric: ${metricId}`);
+    console.log(`Action: ${action} on metric: ${metricId}`);
     // Handle different actions here
   };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (message.trim()) {
-      console.log('Sending message:', message);
-      setMessage('');
+      console.log("Sending message:", message);
+      setMessage("");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full p-8">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!groupMembership) {
+    return <JoinGroup onGroupJoined={handleGroupJoined} />;
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -288,11 +367,7 @@ const MemberHome = () => {
       {/* Dashboard Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
         {dashboardMetrics.map((metric) => (
-          <MetricCard
-            key={metric.id}
-            metric={metric}
-            onAction={handleAction}
-          />
+          <MetricCard key={metric.id} metric={metric} onAction={handleAction} />
         ))}
       </div>
 
@@ -301,8 +376,12 @@ const MemberHome = () => {
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Savings Growth</h2>
-              <p className="text-gray-600 text-sm">Track your contribution progress over time</p>
+              <h2 className="text-xl font-bold text-gray-900">
+                Savings Growth
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Track your contribution progress over time
+              </p>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <div className="flex items-center gap-2">
@@ -318,23 +397,23 @@ const MemberHome = () => {
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="month" 
+              <XAxis
+                dataKey="month"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: '#6b7280', fontSize: 12 }}
+                tick={{ fill: "#6b7280", fontSize: 12 }}
               />
-              <YAxis 
+              <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: '#6b7280', fontSize: 12 }}
+                tick={{ fill: "#6b7280", fontSize: 12 }}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                  backgroundColor: "white",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
                 }}
               />
               <Line
@@ -342,16 +421,16 @@ const MemberHome = () => {
                 dataKey="contributions"
                 stroke="#1F5A3D"
                 strokeWidth={3}
-                dot={{ fill: '#1F5A3D', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, fill: '#1F5A3D' }}
+                dot={{ fill: "#1F5A3D", strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: "#1F5A3D" }}
               />
               <Line
                 type="monotone"
                 dataKey="interest"
                 stroke="#10B981"
                 strokeWidth={3}
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, fill: '#10B981' }}
+                dot={{ fill: "#10B981", strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: "#10B981" }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -368,8 +447,12 @@ const MemberHome = () => {
                 <FiSend className="w-5 h-5 text-[#1F5A3D]" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Message Group Leader</h3>
-                <p className="text-sm text-gray-600">Send a message to your group administrator</p>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Message Group Leader
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Send a message to your group administrator
+                </p>
               </div>
             </div>
             <form onSubmit={handleSendMessage} className="space-y-4">
@@ -400,8 +483,12 @@ const MemberHome = () => {
                   <FiActivity className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Recent Transactions</h3>
-                  <p className="text-sm text-gray-600">Your latest financial activities</p>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Recent Transactions
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Your latest financial activities
+                  </p>
                 </div>
               </div>
               <Button variant="ghost" size="sm">
@@ -416,9 +503,13 @@ const MemberHome = () => {
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${
-                      txn.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'
-                    }`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        txn.status === "completed"
+                          ? "bg-green-500"
+                          : "bg-yellow-500"
+                      }`}
+                    />
                     <div>
                       <p className="font-medium text-gray-900">{txn.type}</p>
                       <p className="text-xs text-gray-500">{txn.date}</p>

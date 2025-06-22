@@ -33,8 +33,6 @@ import GroupLeaderLoans from "./pages/dashboard/groupLeader/GroupLeaderLoans";
 import AdminHome from "./pages/dashboard/admin/AdminHome";
 import Groups from "./pages/dashboard/admin/groups";
 
-
-
 export default function App() {
   const { session, role } = useSession();
 
@@ -97,14 +95,9 @@ export default function App() {
                   <Route path="welfare" element={<WelfareFund />} />
                   <Route path="group-info" element={<GroupInfo />} />
                   <Route path="profile" element={<ProfileSettings />} />
-
-                    <Route path="help" element={<HelpSupport />} />
-                    {/* Add more member subpages here */}
-                  </Route>
-
                   <Route path="help" element={<HelpSupport />} />
+                  {/* Add more member subpages here */}
                 </Route>
-
 
                 {/* Group Leader Dashboard Routes */}
                 <Route
