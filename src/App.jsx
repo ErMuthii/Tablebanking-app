@@ -14,9 +14,8 @@ import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 
 // Member Pages
 import MemberHome from "./pages/dashboard/member/MemberHome";
-
 import Meetings from "./pages/dashboard/member/Meetings";
-import MemberLoans from "./pages/dashboard/member/GroupMemberLoans"; // 🔹 NEW
+import MemberLoans from "./pages/dashboard/member/GroupMemberLoans";
 import MerryGo from "./pages/dashboard/member/merrygo";
 import MyContributions from "./pages/dashboard/member/MyContributions";
 import WelfareFund from "./pages/dashboard/member/WelfareFund";
@@ -32,8 +31,6 @@ import GroupLeaderLoans from "./pages/dashboard/groupLeader/GroupLeaderLoans";
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
 import Groups from "./pages/dashboard/admin/groups";
-
-
 
 export default function App() {
   const { session, role } = useSession();
@@ -60,7 +57,6 @@ export default function App() {
           ) : (
             <>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
               <Route path="/dashboard" element={<Layout />}>
                 <Route
                   index
@@ -77,66 +73,37 @@ export default function App() {
                   }
                 />
 
-                {/* 🔹 Member Dashboard Routes */}
-                <Route
-                  path="member/*"
-                  element={
-                    role === "member" ? (
-                      <MemberDashboard />
-                    ) : (
-                      <Navigate to="/dashboard" replace />
-                    )
-                  }
-                >
-                  <Route index element={<MemberHome />} />
-                  <Route path="meetings" element={<Meetings />} />
-                  <Route path="loans" element={<MemberLoans />} />{" "}
-                  {/* 🔹 NEW */}
-                  <Route path="merrygo" element={<MerryGo />} />
-                  <Route path="contributions" element={<MyContributions />} />
-                  <Route path="welfare" element={<WelfareFund />} />
-                  <Route path="group-info" element={<GroupInfo />} />
-                  <Route path="profile" element={<ProfileSettings />} />
-
+                {/* Member Dashboard Routes */}
+                {role === "member" && (
+                  <Route path="member/*" element={<MemberDashboard />}>
+                    <Route index element={<MemberHome />} />
+                    <Route path="meetings" element={<Meetings />} />
+                    <Route path="loans" element={<MemberLoans />} />
+                    <Route path="merrygo" element={<MerryGo />} />
+                    <Route path="contributions" element={<MyContributions />} />
+                    <Route path="welfare" element={<WelfareFund />} />
+                    <Route path="group-info" element={<GroupInfo />} />
+                    <Route path="profile" element={<ProfileSettings />} />
                     <Route path="help" element={<HelpSupport />} />
-                    {/* Add more member subpages here */}
                   </Route>
-
-                  <Route path="help" element={<HelpSupport />} />
-                </Route>
-
+                )}
 
                 {/* Group Leader Dashboard Routes */}
-                <Route
-                  path="leader/*"
-                  element={
-                    role === "group_leader" ? (
-                      <GroupLeaderDashboard />
-                    ) : (
-                      <Navigate to="/dashboard" replace />
-                    )
-                  }
-                >
-                  <Route index element={<GroupHome />} />
-
-                  <Route path="membership" element={<Membership />} />
-                  <Route path="loans" element={<GroupLeaderLoans />} />
-                </Route>
+                {role === "group_leader" && (
+                  <Route path="leader/*" element={<GroupLeaderDashboard />}>
+                    <Route index element={<GroupHome />} />
+                    <Route path="membership" element={<Membership />} />
+                    <Route path="loans" element={<GroupLeaderLoans />} />
+                  </Route>
+                )}
 
                 {/* Admin Dashboard Routes */}
-                <Route
-                  path="admin/*"
-                  element={
-                    role === "admin" ? (
-                      <AdminDashboard />
-                    ) : (
-                      <Navigate to="/dashboard" replace />
-                    )
-                  }
-                >
-                  <Route index element={<AdminHome />} />
-                  <Route path="groups" element={<Groups />} />
-                </Route>
+                {role === "admin" && (
+                  <Route path="admin/*" element={<AdminDashboard />}>
+                    <Route index element={<AdminHome />} />
+                    <Route path="groups" element={<Groups />} />
+                  </Route>
+                )}
               </Route>
 
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
