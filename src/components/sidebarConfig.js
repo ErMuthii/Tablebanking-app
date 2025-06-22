@@ -10,25 +10,42 @@ import {
 } from "@heroicons/react/24/outline";
 
 export const sidebarConfig = {
-  member: [
-    { label: "Home", path: "/dashboard/member", icon: HomeIcon },
-    {
-      label: "Meetings",
-      path: "/dashboard/member/meetings",
-      icon: CalendarDaysIcon,
-    },
-    {
-      label: "Loans",
-      path: "/dashboard/member/loans",
-      icon: CurrencyDollarIcon,
-    },
-    {
-      label: "MerryGoRound",
-      path: "/dashboard/member/merrygo",
-      icon: ArrowPathIcon,
-    },
-    { label: "Welfare", path: "/dashboard/member/welfare", icon: HeartIcon },
-  ],
+member: [
+  { label: "Home", path: "/dashboard/member", icon: HomeIcon },
+  {
+    label: "My Contributions",
+    path: "/dashboard/member/contributions",
+    icon: CurrencyDollarIcon,
+  },
+  
+{
+  label: "Loans",
+  path: "/dashboard/member/loans",
+  icon: CurrencyDollarIcon,
+},
+  {
+    label: "Merry-Go-Round",
+    path: "/dashboard/member/merrygo",
+    icon: ArrowPathIcon,
+  },
+  {
+    label: "Welfare Fund",
+    path: "/dashboard/member/welfare",
+    icon: HeartIcon,
+  },
+  {
+    label: "Meetings",
+    path: "/dashboard/member/meetings",
+    icon: CalendarDaysIcon,
+  },
+{
+  label: "Group Info",
+  path: "/dashboard/member/group-info",
+  icon: UsersIcon // or use InformationCircleIcon
+}
+
+
+],
 
   group_leader: [
     // start with everything a member sees…
@@ -39,17 +56,23 @@ export const sidebarConfig = {
         path: "/dashboard/leader/meetings",
         icon: CalendarDaysIcon,
       },
-      {
-        label: "Loans",
-        path: "/dashboard/leader/loans",
-        icon: CurrencyDollarIcon,
-      },
-      {
-        label: "MerryGoRound",
-        path: "/dashboard/leader/merrygo",
-        icon: ArrowPathIcon,
-      },
-      { label: "Welfare", path: "/dashboard/leader/welfare", icon: HeartIcon },
+{
+  label: "Loans",
+  path: "/dashboard/leader/loans",
+  icon: CurrencyDollarIcon,
+},
+
+{
+  label: "Merry-Go-Round",
+  path: "/dashboard/leader/merrygo",
+  icon: ArrowPathIcon,
+},
+
+{
+  title: "Welfare Fund",
+  path: "/dashboard/leader/welfare-fund",
+  icon: "HeartIcon" // or any other icon you're using from lucide-react
+},
     ],
     // …plus leader-only links
     {

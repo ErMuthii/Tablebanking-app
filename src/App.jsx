@@ -1,26 +1,43 @@
-import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useSession } from "./hooks/useSession";
 
+// Public Pages
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 
+// Layout and Dashboards
 import Layout from "./components/Layout";
 import MemberDashboard from "./pages/dashboard/member/MemberDashboard";
 import GroupLeaderDashboard from "./pages/dashboard/groupLeader/GroupLeaderDashboard";
 import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
-import Groups from "./pages/dashboard/admin/groups";
-import AdminHome from "./pages/dashboard/admin/AdminHome";
-import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
+
+// Member Pages
 import MemberHome from "./pages/dashboard/member/MemberHome";
+
+import Meetings from "./pages/dashboard/member/Meetings";
+import Loans from "./pages/dashboard/member/Loans"; // 🔹 NEW
+import MerryGo from "./pages/dashboard/member/merrygo";
+import MyContributions from "./pages/dashboard/member/MyContributions";
+import WelfareFund from "./pages/dashboard/member/WelfareFund";
+import GroupInfo from "./pages/dashboard/member/GroupInfo";
+import ProfileSettings from "./pages/dashboard/member/ProfileSettings";
+import HelpSupport from "./pages/dashboard/member/HelpSupport";
+
+
+// Group Leader Pages
+import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
+
+// Admin Pages
+import AdminHome from "./pages/dashboard/admin/AdminHome";
+import Groups from "./pages/dashboard/admin/groups";
+
 import Membership from "./pages/dashboard/groupLeader/Membership";
 import Loans from "./pages/dashboard/groupLeader/Loans";
 
 export default function App() {
   const { session, role } = useSession();
 
-  // Show a loading spinner while role is being fetched for a logged-in user
   if (session && role === null) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -33,23 +50,18 @@ export default function App() {
     <div className="flex flex-col justify-between min-h-screen">
       <BrowserRouter>
         <Routes>
-          {/* Public (no session) */}
           {!session ? (
             <>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
-              {/* Redirect anything else back to landing page */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           ) : (
             <>
-              {/* Once logged in, if you hit `/` go straight to your dashboard */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-              {/* Dashboard layout with nested, role-protected routes */}
               <Route path="/dashboard" element={<Layout />}>
-                {/* Default `/dashboard` → send to correct subpath */}
                 <Route
                   index
                   element={
@@ -65,7 +77,7 @@ export default function App() {
                   }
                 />
 
-                {/* Member dashboard with nested routes */}
+                {/* 🔹 Member Dashboard Routes */}
                 <Route
                   path="member/*"
                   element={
@@ -78,10 +90,21 @@ export default function App() {
                 >
                   <Route index element={<MemberHome />} />
 
-                  {/* Add more member subpages here */}
+                  <Route path="meetings" element={<Meetings />} />
+                  <Route path="loans" element={<Loans />} /> {/* 🔹 NEW */}
+                  <Route path="merrygo" element={<MerryGo />} />
+                  <Route path="contributions" element={<MyContributions />} />
+                  <Route path="welfare" element={<WelfareFund />} />
+                  <Route path="group-info" element={<GroupInfo />} />
+                  <Route path="profile" element={<ProfileSettings />} />
+                  <Route path="help" element={<HelpSupport />} />
+                  
+
+
+                  {/* Add more member subpages here */
                 </Route>
 
-                {/* Group leader dashboard with nested routes */}
+                {/* Group Leader Dashboard Routes */}
                 <Route
                   path="leader/*"
                   element={
@@ -93,13 +116,15 @@ export default function App() {
                   }
                 >
                   <Route index element={<GroupHome />} />
+
                   <Route path="membership" element={<Membership />} />
                   <Route path="loans" element={<Loans />} />
 
                   {/* Add more group leader subpages here */}
+
                 </Route>
 
-                {/* Admin dashboard with nested routes */}
+                {/* Admin Dashboard Routes */}
                 <Route
                   path="admin/*"
                   element={
@@ -112,11 +137,9 @@ export default function App() {
                 >
                   <Route index element={<AdminHome />} />
                   <Route path="groups" element={<Groups />} />
-                  {/* Add more admin subpages here if needed */}
                 </Route>
               </Route>
 
-              {/* Catch-all for any other logged-in URL */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </>
           )}
