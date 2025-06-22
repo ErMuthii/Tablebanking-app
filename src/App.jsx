@@ -16,7 +16,7 @@ import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 import MemberHome from "./pages/dashboard/member/MemberHome";
 
 import Meetings from "./pages/dashboard/member/Meetings";
-import Loans from "./pages/dashboard/member/Loans"; // 🔹 NEW
+import MemberLoans from "./pages/dashboard/member/GroupMemberLoans"; // 🔹 NEW
 import MerryGo from "./pages/dashboard/member/merrygo";
 import MyContributions from "./pages/dashboard/member/MyContributions";
 import WelfareFund from "./pages/dashboard/member/WelfareFund";
@@ -24,16 +24,16 @@ import GroupInfo from "./pages/dashboard/member/GroupInfo";
 import ProfileSettings from "./pages/dashboard/member/ProfileSettings";
 import HelpSupport from "./pages/dashboard/member/HelpSupport";
 
-
 // Group Leader Pages
 import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
+import Membership from "./pages/dashboard/groupLeader/Membership";
+import GroupLeaderLoans from "./pages/dashboard/groupLeader/GroupLeaderLoans";
 
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
 import Groups from "./pages/dashboard/admin/groups";
 
-import Membership from "./pages/dashboard/groupLeader/Membership";
-import Loans from "./pages/dashboard/groupLeader/Loans";
+
 
 export default function App() {
   const { session, role } = useSession();
@@ -89,17 +89,22 @@ export default function App() {
                   }
                 >
                   <Route index element={<MemberHome />} />
-
                   <Route path="meetings" element={<Meetings />} />
-                  <Route path="loans" element={<Loans />} /> {/* 🔹 NEW */}
+                  <Route path="loans" element={<MemberLoans />} />{" "}
+                  {/* 🔹 NEW */}
                   <Route path="merrygo" element={<MerryGo />} />
                   <Route path="contributions" element={<MyContributions />} />
                   <Route path="welfare" element={<WelfareFund />} />
                   <Route path="group-info" element={<GroupInfo />} />
                   <Route path="profile" element={<ProfileSettings />} />
+
                     <Route path="help" element={<HelpSupport />} />
                     {/* Add more member subpages here */}
                   </Route>
+
+                  <Route path="help" element={<HelpSupport />} />
+                </Route>
+
 
                 {/* Group Leader Dashboard Routes */}
                 <Route
@@ -115,10 +120,7 @@ export default function App() {
                   <Route index element={<GroupHome />} />
 
                   <Route path="membership" element={<Membership />} />
-                  <Route path="loans" element={<Loans />} />
-
-                  {/* Add more group leader subpages here */}
-
+                  <Route path="loans" element={<GroupLeaderLoans />} />
                 </Route>
 
                 {/* Admin Dashboard Routes */}
