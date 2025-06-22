@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 
 // Member Pages
 import MemberHome from "./pages/dashboard/member/MemberHome";
+
 import Meetings from "./pages/dashboard/member/Meetings";
 import Loans from "./pages/dashboard/member/Loans"; // 🔹 NEW
 import MerryGo from "./pages/dashboard/member/merrygo";
@@ -30,6 +31,9 @@ import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
 import Groups from "./pages/dashboard/admin/groups";
+
+import Membership from "./pages/dashboard/groupLeader/Membership";
+import Loans from "./pages/dashboard/groupLeader/Loans";
 
 export default function App() {
   const { session, role } = useSession();
@@ -85,6 +89,7 @@ export default function App() {
                   }
                 >
                   <Route index element={<MemberHome />} />
+
                   <Route path="meetings" element={<Meetings />} />
                   <Route path="loans" element={<Loans />} /> {/* 🔹 NEW */}
                   <Route path="merrygo" element={<MerryGo />} />
@@ -95,6 +100,8 @@ export default function App() {
                   <Route path="help" element={<HelpSupport />} />
                   
 
+
+                  {/* Add more member subpages here */
                 </Route>
 
                 {/* Group Leader Dashboard Routes */}
@@ -109,6 +116,12 @@ export default function App() {
                   }
                 >
                   <Route index element={<GroupHome />} />
+
+                  <Route path="membership" element={<Membership />} />
+                  <Route path="loans" element={<Loans />} />
+
+                  {/* Add more group leader subpages here */}
+
                 </Route>
 
                 {/* Admin Dashboard Routes */}
