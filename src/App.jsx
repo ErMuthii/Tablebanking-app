@@ -118,6 +118,8 @@ export default function App() {
                   <Route path="loans" element={<GroupLeaderLoans />} />
                   <Route path="attendance" element={<AttendancePage />} />
                   <Route path="meetings" element={<GroupLeaderMeetings />} />
+                  <Route path="contributions" element={<GroupLeaderContributions />} />
+                  <Route path="merrygo" element={<GroupLeaderMerryGo />} />
                 </Route>
 
                 {/* Admin Dashboard Routes */}
