@@ -14,11 +14,10 @@ import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 
 // Member Pages
 import MemberHome from "./pages/dashboard/member/MemberHome";
-
 import Meetings from "./pages/dashboard/member/Meetings";
-import MemberLoans from "./pages/dashboard/member/GroupMemberLoans"; // 🔹 NEW
-import MerryGo from "./pages/dashboard/member/merrygo";
-import MyContributions from "./pages/dashboard/member/MyContributions";
+import MemberLoans from "./pages/dashboard/member/GroupMemberLoans";
+import MemberMerryGo from "./pages/dashboard/member/MemberMerryGo";
+import MyContributions from "./pages/dashboard/member/MemberContributions";
 import WelfareFund from "./pages/dashboard/member/WelfareFund";
 import GroupInfo from "./pages/dashboard/member/GroupInfo";
 import ProfileSettings from "./pages/dashboard/member/ProfileSettings";
@@ -28,6 +27,8 @@ import HelpSupport from "./pages/dashboard/member/HelpSupport";
 import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
 import Membership from "./pages/dashboard/groupLeader/Membership";
 import GroupLeaderLoans from "./pages/dashboard/groupLeader/GroupLeaderLoans";
+import GroupLeaderMerryGo from "./pages/dashboard/groupLeader/GroupLeaderMerryGo";
+import GroupLeaderContributions from "./pages/dashboard/groupLeader/GroupLeaderContributions";
 import AttendancePage from "./pages/dashboard/groupLeader/Attendance";
 import GroupLeaderMeetings from "./pages/dashboard/groupLeader/GroupLeaderMeetings";
 
@@ -35,7 +36,6 @@ import GroupLeaderMeetings from "./pages/dashboard/groupLeader/GroupLeaderMeetin
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
 import Groups from "./pages/dashboard/admin/groups";
-
 
 export default function App() {
   const { session, role } = useSession();
@@ -62,7 +62,6 @@ export default function App() {
           ) : (
             <>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
               <Route path="/dashboard" element={<Layout />}>
                 <Route
                   index
@@ -122,19 +121,12 @@ export default function App() {
                 </Route>
 
                 {/* Admin Dashboard Routes */}
-                <Route
-                  path="admin/*"
-                  element={
-                    role === "admin" ? (
-                      <AdminDashboard />
-                    ) : (
-                      <Navigate to="/dashboard" replace />
-                    )
-                  }
-                >
-                  <Route index element={<AdminHome />} />
-                  <Route path="groups" element={<Groups />} />
-                </Route>
+                {role === "admin" && (
+                  <Route path="admin/*" element={<AdminDashboard />}>
+                    <Route index element={<AdminHome />} />
+                    <Route path="groups" element={<Groups />} />
+                  </Route>
+                )}
               </Route>
 
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

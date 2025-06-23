@@ -51,6 +51,11 @@ export const sidebarConfig = {
     // start with everything a member sees…
     ...[
       { label: "Home", path: "/dashboard/leader", icon: HomeIcon },
+        {
+    label: "My Contributions",
+    path: "/dashboard/leader/contributions",
+    icon: CurrencyDollarIcon,
+  },
       {
         label: "Meetings",
         path: "/dashboard/leader/meetings",
@@ -68,11 +73,11 @@ export const sidebarConfig = {
         icon: ArrowTrendingUpIcon,
       },
 
-      {
-        title: "Welfare Fund",
-        path: "/dashboard/leader/welfare-fund",
-        icon: "HeartIcon", // or any other icon you're using from lucide-react
-      },
+{
+  label: "Welfare Fund",
+  path: "/dashboard/leader/welfare-fund",
+  icon: HeartIcon // or any other icon you're using from lucide-react
+},
     ],
     // …plus leader-only links
     {
