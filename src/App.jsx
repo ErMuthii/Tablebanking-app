@@ -93,7 +93,7 @@ export default function App() {
                   <Route path="meetings" element={<Meetings />} />
                   <Route path="loans" element={<MemberLoans />} />{" "}
                   {/* 🔹 NEW */}
-                  <Route path="merrygo" element={<MerryGo />} />
+                  <Route path="merrygo" element={<MemberMerryGo />} />
                   <Route path="contributions" element={<MyContributions />} />
                   <Route path="welfare" element={<WelfareFund />} />
                   <Route path="group-info" element={<GroupInfo />} />
