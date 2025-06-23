@@ -15,7 +15,7 @@ import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 // Member Pages
 import MemberHome from "./pages/dashboard/member/MemberHome";
 import Meetings from "./pages/dashboard/member/Meetings";
-import MemberLoans from "./pages/dashboard/member/GroupMemberLoans";
+import MemberLoans from "./pages/dashboard/member/MemberLoans";
 import MemberMerryGo from "./pages/dashboard/member/MemberMerryGo";
 import MyContributions from "./pages/dashboard/member/MemberContributions";
 import WelfareFund from "./pages/dashboard/member/WelfareFund";
@@ -93,7 +93,7 @@ export default function App() {
                   <Route path="meetings" element={<Meetings />} />
                   <Route path="loans" element={<MemberLoans />} />{" "}
                   {/* 🔹 NEW */}
-                  <Route path="merrygo" element={<MerryGo />} />
+                  <Route path="merrygo" element={<MemberMerryGo />} />
                   <Route path="contributions" element={<MyContributions />} />
                   <Route path="welfare" element={<WelfareFund />} />
                   <Route path="group-info" element={<GroupInfo />} />

@@ -1,122 +1,101 @@
-// src/pages/dashboard/groupLeader/GroupLeaderMerryGo.jsx
 import React, { useEffect, useState } from "react";
-import DataTable from "react-data-table-component";
 import { supabase } from "@/SupabaseClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { useSession } from "@/hooks/useSession";
-import { Card, CardContent } from "@/components/ui/card";
-
-const columns = [
-  { name: "#", selector: (_, i) => i + 1, width: "60px" },
-  { name: "Month", selector: row => row.month, sortable: true },
-  { name: "Recipient", selector: row => row.recipient, sortable: true },
-];
+import { Loader2, Calendar } from "lucide-react";
+import { toast } from "sonner";
 
 const GroupLeaderMerryGo = () => {
   const { user } = useSession();
   const [schedule, setSchedule] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchSchedule();
-    }
-  }, [user]);
+  const generateSchedule = (members) => {
+    const result = [];
+    const startDate = new Date(2025, 5); // June 2025
 
-  const fetchSchedule = async () => {
-    // Step 1: Get the group_id of the current user from group_members
-    const { data: groupMemberData, error: gmError } = await supabase
-      .from("group_members")
-      .select("group_id")
-      .eq("member_id", user.id)
-      .single();
-
-    if (gmError || !groupMemberData) {
-      console.error("Failed to fetch group_id for user", gmError);
-      return;
+    for (let i = 0; i < members.length; i++) {
+      const date = new Date(startDate);
+      date.setMonth(startDate.getMonth() + i);
+      result.push({
+        member: members[i].profiles.full_name,
+        month: date.toLocaleString("default", { month: "long", year: "numeric" }),
+      });
     }
 
-    const groupId = groupMemberData.group_id;
-
-    // Step 2: Get all members in the same group ordered by joined_at
-    const { data: membersData, error: membersError } = await supabase
-      .from("group_members")
-      .select("member_id")
-      .eq("group_id", groupId)
-      .order("joined_at", { ascending: true });
-
-    if (membersError || !membersData) {
-      console.error("Failed to fetch group members", membersError);
-      return;
-    }
-
-    const memberIds = membersData.map(m => m.member_id);
-
-    // Step 3: Get member profiles
-    const { data: profilesData, error: profilesError } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", memberIds);
-
-    if (profilesError || !profilesData) {
-      console.error("Failed to fetch profiles", profilesError);
-      return;
-    }
-
-    const nameMap = Object.fromEntries(
-      profilesData.map(profile => [profile.id, profile.full_name])
-    );
-
-    // Step 4: Build schedule (next N months based on member order)
-    const now = new Date();
-    const scheduleList = membersData.map((member, index) => {
-      const scheduledMonth = new Date(now.getFullYear(), now.getMonth() + index, 1);
-      return {
-        month: scheduledMonth.toLocaleString("default", { month: "long", year: "numeric" }),
-        recipient: nameMap[member.member_id] || "Unknown",
-      };
-    });
-
-    setSchedule(scheduleList);
+    return result;
   };
 
-  const topTen = schedule.slice(0, 10);
-  const overflow = schedule.slice(10);
+  useEffect(() => {
+    const fetchMembers = async () => {
+      setLoading(true);
+      try {
+        if (!user) return;
+
+        const { data: groupMembers, error } = await supabase
+          .from("group_members")
+          .select("id, created_at, profiles(full_name), group_id")
+          .eq("group_id", (await supabase
+            .from("group_members")
+            .select("group_id")
+            .eq("member_id", user.id)
+            .single()).data.group_id)
+          .order("created_at", { ascending: true });
+
+        if (error) {
+          toast.error("Failed to fetch group members");
+          return;
+        }
+
+        const scheduleData = generateSchedule(groupMembers);
+        setSchedule(scheduleData);
+      } catch (err) {
+        console.error(err);
+        toast.error("Unexpected error loading schedule");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMembers();
+  }, [user]);
 
   return (
-    <div className="p-6 space-y-8 bg-white min-h-screen">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Merry-Go-Round Schedule</h1>
-        <p className="text-sm text-gray-500 mb-4">
-          Showing members in order of distribution
-        </p>
-      </div>
-
-      <Card className="border border-gray-200 shadow">
-        <CardContent className="p-6">
-          <h2 className="text-lg font-semibold text-gray-700 mb-3">Upcoming 10 Recipients</h2>
-          <DataTable
-            columns={columns}
-            data={topTen}
-            noHeader
-            highlightOnHover
-            pagination={false}
-          />
+    <div className="p-6">
+      <Card className="shadow-lg border border-gray-100">
+        <CardHeader className="bg-white border-b border-gray-100">
+          <CardTitle className="text-[#1F5A3D] text-2xl flex items-center gap-2">
+            <Calendar className="w-6 h-6 text-[#1F5A3D]" />
+            Merry-Go-Round Schedule
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto max-h-[500px] overflow-y-auto">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-[#1F5A3D]" />
+              <span className="ml-2 text-[#1F5A3D] font-medium">Loading schedule...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-green-50">
+                  <TableHead className="text-[#1F5A3D] font-semibold">Month</TableHead>
+                  <TableHead className="text-[#1F5A3D] font-semibold">Recipient</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {schedule.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.month}</TableCell>
+                    <TableCell>{item.member}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
-
-      {overflow.length > 0 && (
-        <Card className="border border-gray-200 shadow">
-          <CardContent className="p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-3">More Recipients</h2>
-            <DataTable
-              columns={columns}
-              data={overflow}
-              noHeader
-              highlightOnHover
-              pagination={false}
-            />
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

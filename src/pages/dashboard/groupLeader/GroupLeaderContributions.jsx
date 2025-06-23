@@ -15,6 +15,7 @@ import {
 
 const GroupLeaderContributions = () => {
   const { user } = useSession();
+  const [groupId, setGroupId] = useState(null);
   const [myContributions, setMyContributions] = useState([]);
   const [groupContributions, setGroupContributions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,35 +23,31 @@ const GroupLeaderContributions = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ phone: "", amount: "" });
 
-  const groupId = "da784883-4b03-4e60-95f6-4b26061b60bd"; // Replace dynamically if needed
+  useEffect(() => {
+    if (user?.id) {
+      fetchGroupId();
+    }
+  }, [user]);
 
   useEffect(() => {
-    fetchGroupContributions();
-    fetchMyContributions();
-  }, []);
+    if (groupId) {
+      fetchGroupContributions();
+      fetchMyContributions();
+    }
+  }, [groupId]);
 
-  const fetchMyContributions = async () => {
+  const fetchGroupId = async () => {
     const { data, error } = await supabase
-      .from("contributions")
-      .select(`
-        id,
-        amount,
-        type,
-        date_contributed
-      `)
-      .in("group_member_id", [
-        ...(await getMyGroupMemberIds()),
-      ])
-      .order("date_contributed", { ascending: false });
+      .from("group_members")
+      .select("group_id")
+      .eq("member_id", user.id)
+      .eq("role", "group_leader")
+      .maybeSingle();
 
     if (!error && data) {
-      const formatted = data.map((c, i) => ({
-        id: i + 1,
-        amount: c.amount,
-        type: c.type,
-        date: c.date_contributed,
-      }));
-      setMyContributions(formatted);
+      setGroupId(data.group_id);
+    } else {
+      console.error("Failed to fetch group_id", error);
     }
   };
 
@@ -62,6 +59,26 @@ const GroupLeaderContributions = () => {
       .eq("member_id", user.id);
 
     return data?.map((d) => d.id) || [];
+  };
+
+  const fetchMyContributions = async () => {
+    const memberIds = await getMyGroupMemberIds();
+
+    const { data, error } = await supabase
+      .from("contributions")
+      .select("id, amount, type, date_contributed")
+      .in("group_member_id", memberIds)
+      .order("date_contributed", { ascending: false });
+
+    if (!error && data) {
+      const formatted = data.map((c, i) => ({
+        id: i + 1,
+        amount: c.amount,
+        type: c.type,
+        date: c.date_contributed,
+      }));
+      setMyContributions(formatted);
+    }
   };
 
   const fetchGroupContributions = async () => {
@@ -84,21 +101,19 @@ const GroupLeaderContributions = () => {
       .eq("group_members.group_id", groupId)
       .order("date_contributed", { ascending: false });
 
-    if (error) {
+    if (!error && data) {
+      const formatted = data.map((entry, i) => ({
+        id: i + 1,
+        contributor: entry.group_members?.profiles?.full_name || "Unknown",
+        amount: entry.amount,
+        type: entry.type,
+        date: entry.date_contributed,
+      }));
+      setGroupContributions(formatted);
+    } else {
       console.error("Error fetching contributions:", error);
-      setLoading(false);
-      return;
     }
 
-    const formatted = data.map((entry, i) => ({
-      id: i + 1,
-      contributor: entry.group_members?.profiles?.full_name || "Unknown",
-      amount: entry.amount,
-      type: entry.type,
-      date: entry.date_contributed,
-    }));
-
-    setGroupContributions(formatted);
     setLoading(false);
   };
 
@@ -112,7 +127,7 @@ const GroupLeaderContributions = () => {
     const [groupMemberId] = await getMyGroupMemberIds();
     if (!groupMemberId) return;
 
-    const { data, error } = await supabase.from("contributions").insert([
+    const { error } = await supabase.from("contributions").insert([
       {
         group_member_id: groupMemberId,
         amount: Number(formData.amount),
