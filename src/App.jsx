@@ -16,8 +16,8 @@ import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 import MemberHome from "./pages/dashboard/member/MemberHome";
 import Meetings from "./pages/dashboard/member/Meetings";
 import MemberLoans from "./pages/dashboard/member/GroupMemberLoans";
-import MerryGo from "./pages/dashboard/member/merrygo";
-import MyContributions from "./pages/dashboard/member/MyContributions";
+import MemberMerryGo from "./pages/dashboard/member/MemberMerryGo";
+import MyContributions from "./pages/dashboard/member/MemberContributions";
 import WelfareFund from "./pages/dashboard/member/WelfareFund";
 import GroupInfo from "./pages/dashboard/member/GroupInfo";
 import ProfileSettings from "./pages/dashboard/member/ProfileSettings";
@@ -27,6 +27,8 @@ import HelpSupport from "./pages/dashboard/member/HelpSupport";
 import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
 import Membership from "./pages/dashboard/groupLeader/Membership";
 import GroupLeaderLoans from "./pages/dashboard/groupLeader/GroupLeaderLoans";
+import GroupLeaderMerryGo from "./pages/dashboard/groupLeader/GroupLeaderMerryGo";
+import GroupLeaderContributions from "./pages/dashboard/groupLeader/GroupLeaderContributions";
 
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
@@ -79,12 +81,13 @@ export default function App() {
                     <Route index element={<MemberHome />} />
                     <Route path="meetings" element={<Meetings />} />
                     <Route path="loans" element={<MemberLoans />} />
-                    <Route path="merrygo" element={<MerryGo />} />
+                    <Route path="merrygo" element={<MemberMerryGo />} />
                     <Route path="contributions" element={<MyContributions />} />
                     <Route path="welfare" element={<WelfareFund />} />
                     <Route path="group-info" element={<GroupInfo />} />
                     <Route path="profile" element={<ProfileSettings />} />
                     <Route path="help" element={<HelpSupport />} />
+
                   </Route>
                 )}
 
@@ -94,6 +97,8 @@ export default function App() {
                     <Route index element={<GroupHome />} />
                     <Route path="membership" element={<Membership />} />
                     <Route path="loans" element={<GroupLeaderLoans />} />
+                    <Route path="merrygo" element={<GroupLeaderMerryGo />} />
+                    <Route path="contributions" element={<GroupLeaderContributions />} />
                   </Route>
                 )}
 
