@@ -18,7 +18,7 @@ import Meetings from "./pages/dashboard/member/Meetings";
 import MemberLoans from "./pages/dashboard/member/GroupMemberLoans";
 import MemberMerryGo from "./pages/dashboard/member/MemberMerryGo";
 import MyContributions from "./pages/dashboard/member/MemberContributions";
-import WelfareFund from "./pages/dashboard/member/WelfareFund";
+import WelfareFund from "./pages/dashboard/member/MemberWelfareFund";
 import GroupInfo from "./pages/dashboard/member/GroupInfo";
 import ProfileSettings from "./pages/dashboard/member/ProfileSettings";
 import HelpSupport from "./pages/dashboard/member/HelpSupport";
@@ -31,7 +31,7 @@ import GroupLeaderMerryGo from "./pages/dashboard/groupLeader/GroupLeaderMerryGo
 import GroupLeaderContributions from "./pages/dashboard/groupLeader/GroupLeaderContributions";
 import AttendancePage from "./pages/dashboard/groupLeader/Attendance";
 import GroupLeaderMeetings from "./pages/dashboard/groupLeader/GroupLeaderMeetings";
-
+import GroupLeaderWelfareFund from "./pages/dashboard/groupLeader/GroupLeaderWelfareFund";
 
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
@@ -118,8 +118,12 @@ export default function App() {
                   <Route path="loans" element={<GroupLeaderLoans />} />
                   <Route path="attendance" element={<AttendancePage />} />
                   <Route path="meetings" element={<GroupLeaderMeetings />} />
-                  <Route path="contributions" element={<GroupLeaderContributions />} />
+                  <Route
+                    path="contributions"
+                    element={<GroupLeaderContributions />}
+                  />
                   <Route path="merrygo" element={<GroupLeaderMerryGo />} />
+                  <Route path="welfare" element={<GroupLeaderWelfareFund />} />
                 </Route>
 
                 {/* Admin Dashboard Routes */}
