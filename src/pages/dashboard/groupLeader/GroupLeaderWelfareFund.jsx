@@ -7,7 +7,14 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FiCheck, FiX, FiPlusCircle, FiUser, FiHeart, FiClock } from "react-icons/fi";
+import {
+  FiCheck,
+  FiX,
+  FiPlusCircle,
+  FiUser,
+  FiHeart,
+  FiClock,
+} from "react-icons/fi";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -55,14 +62,17 @@ const WelfareRequestCard = ({ request, onApprove, onReject, isLeader }) => {
             </p>
           </div>
           {request.status === "pending" && (
-            <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+            <Badge
+              variant="secondary"
+              className="bg-amber-100 text-amber-800 border-amber-200"
+            >
               <FiClock className="h-3 w-3 mr-1" />
               Pending
             </Badge>
           )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Description */}
         <p className="text-sm text-gray-600 leading-relaxed">
@@ -81,19 +91,19 @@ const WelfareRequestCard = ({ request, onApprove, onReject, isLeader }) => {
                 KSh {request.amount_requested?.toLocaleString() || 0}
               </span>
             </div>
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className="bg-[#1F5A3D]/10 text-[#1F5A3D] border-[#1F5A3D]/20 font-semibold"
             >
               {(request.progress_percentage || 0).toFixed(0)}%
             </Badge>
           </div>
-          
-          <Progress 
-            value={request.progress_percentage || 0} 
+
+          <Progress
+            value={request.progress_percentage || 0}
             className="h-2 bg-gray-200"
             style={{
-              '--progress-background': '#1F5A3D',
+              "--progress-background": "#1F5A3D",
             }}
           />
         </div>
@@ -230,26 +240,27 @@ const GroupLeaderWelfareFund = () => {
                 Welfare Fund Management
               </h1>
               <p className="text-gray-600 text-lg">
-                Support members facing emergencies through voluntary contributions.
+                Support members facing emergencies through voluntary
+                contributions.
               </p>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="bg-[#1F5A3D] hover:bg-[#1F5A3D]/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <FiPlusCircle className="mr-2 h-5 w-5" />
                   Request Help
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-amber-50 max-w-2xl">
+              <DialogContent className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogTitle className="text-xl font-semibold text-gray-900">
                   Request Emergency Help (On Behalf)
                 </DialogTitle>
                 <DialogDescription className="text-gray-600">
-                  As a group leader, you can submit a welfare request for any member
-                  in your group.
+                  As a group leader, you can submit a welfare request for any
+                  member in your group.
                 </DialogDescription>
                 <RequestHelpForm
                   mode="leader"
@@ -264,15 +275,15 @@ const GroupLeaderWelfareFund = () => {
         {/* Tabs Section */}
         <Tabs defaultValue="active" className="space-y-6">
           <TabsList className="bg-white shadow-sm border border-gray-200 p-1 h-auto">
-            <TabsTrigger 
-              value="active" 
+            <TabsTrigger
+              value="active"
               className="data-[state=active]:bg-[#1F5A3D] data-[state=active]:text-white px-6 py-3 text-base font-medium"
             >
               <FiHeart className="mr-2 h-4 w-4" />
               Active Requests
             </TabsTrigger>
-            <TabsTrigger 
-              value="pending" 
+            <TabsTrigger
+              value="pending"
               className="data-[state=active]:bg-[#1F5A3D] data-[state=active]:text-white px-6 py-3 text-base font-medium"
             >
               <FiClock className="mr-2 h-4 w-4" />
@@ -289,13 +300,19 @@ const GroupLeaderWelfareFund = () => {
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1F5A3D]"></div>
-                <span className="ml-3 text-gray-600">Loading active requests...</span>
+                <span className="ml-3 text-gray-600">
+                  Loading active requests...
+                </span>
               </div>
             ) : activeRequests.length === 0 ? (
               <div className="text-center py-12">
                 <FiHeart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No active requests</h3>
-                <p className="text-gray-600">There are currently no active welfare requests.</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No active requests
+                </h3>
+                <p className="text-gray-600">
+                  There are currently no active welfare requests.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -314,13 +331,19 @@ const GroupLeaderWelfareFund = () => {
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1F5A3D]"></div>
-                <span className="ml-3 text-gray-600">Loading pending requests...</span>
+                <span className="ml-3 text-gray-600">
+                  Loading pending requests...
+                </span>
               </div>
             ) : pendingRequests.length === 0 ? (
               <div className="text-center py-12">
                 <FiClock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No pending requests</h3>
-                <p className="text-gray-600">All requests have been reviewed.</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No pending requests
+                </h3>
+                <p className="text-gray-600">
+                  All requests have been reviewed.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

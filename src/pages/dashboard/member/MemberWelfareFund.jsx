@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FiPlusCircle, FiHeart, FiUsers, FiTrendingUp, FiUser } from "react-icons/fi";
+import {
+  FiPlusCircle,
+  FiHeart,
+  FiUsers,
+  FiTrendingUp,
+  FiUser,
+} from "react-icons/fi";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -52,15 +58,15 @@ const WelfareRequestCard = ({ request }) => {
               {request.requester_name || "Anonymous"}
             </p>
           </div>
-          <Badge 
-            variant="outline" 
+          <Badge
+            variant="outline"
             className="bg-green-100 text-green-800 border-green-200 shrink-0"
           >
             Active
           </Badge>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Description */}
         <p className="text-sm text-gray-600 leading-relaxed">
@@ -79,19 +85,19 @@ const WelfareRequestCard = ({ request }) => {
                 KSh {request.amount_requested?.toLocaleString() || 0}
               </span>
             </div>
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className="bg-[#1F5A3D]/10 text-[#1F5A3D] border-[#1F5A3D]/20 font-semibold"
             >
               {(request.progress_percentage || 0).toFixed(0)}%
             </Badge>
           </div>
-          
-          <Progress 
-            value={request.progress_percentage || 0} 
+
+          <Progress
+            value={request.progress_percentage || 0}
             className="h-2 bg-gray-200"
             style={{
-              '--progress-background': '#1F5A3D',
+              "--progress-background": "#1F5A3D",
             }}
           />
         </div>
@@ -106,7 +112,13 @@ const WelfareRequestCard = ({ request }) => {
   );
 };
 
-const StatsCard = ({ icon: Icon, title, value, description, color = "bg-[#1F5A3D]" }) => (
+const StatsCard = ({
+  icon: Icon,
+  title,
+  value,
+  description,
+  color = "bg-[#1F5A3D]",
+}) => (
   <Card className="bg-gradient-to-br from-white to-green-50/30 border-0 shadow-md hover:shadow-lg transition-all duration-300">
     <CardContent className="p-6">
       <div className="flex items-center gap-4">
@@ -130,7 +142,7 @@ const MemberWelfareFund = () => {
   const [stats, setStats] = useState({
     totalRequests: 0,
     totalContributed: 0,
-    activeRequests: 0
+    activeRequests: 0,
   });
 
   useEffect(() => {
@@ -163,13 +175,16 @@ const MemberWelfareFund = () => {
       toast.error("Error fetching requests: " + error.message);
     } else {
       setRequests(data || []);
-      
+
       // Calculate stats
-      const totalContributed = (data || []).reduce((sum, req) => sum + (req.total_contributed || 0), 0);
+      const totalContributed = (data || []).reduce(
+        (sum, req) => sum + (req.total_contributed || 0),
+        0
+      );
       setStats({
         totalRequests: (data || []).length,
         totalContributed,
-        activeRequests: (data || []).length
+        activeRequests: (data || []).length,
       });
     }
     setLoading(false);
@@ -191,26 +206,27 @@ const MemberWelfareFund = () => {
                 Welfare Fund
               </h1>
               <p className="text-gray-600 text-lg">
-                Support members facing emergencies through voluntary contributions.
+                Support members facing emergencies through voluntary
+                contributions.
               </p>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="bg-[#1F5A3D] hover:bg-[#1F5A3D]/90 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <FiPlusCircle className="mr-2 h-5 w-5" />
                   Request Help
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-amber-50 max-w-2xl">
+              <DialogContent className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogTitle className="text-xl font-semibold text-gray-900">
                   Request Emergency Help
                 </DialogTitle>
                 <DialogDescription className="text-gray-600">
-                  Fill out the form below to request welfare assistance from your
-                  group.
+                  Fill out the form below to request welfare assistance from
+                  your group.
                 </DialogDescription>
                 <RequestHelpForm mode="member" onSuccess={handleFormSuccess} />
               </DialogContent>
@@ -247,7 +263,9 @@ const MemberWelfareFund = () => {
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1F5A3D] mx-auto mb-4"></div>
-              <p className="text-gray-600 text-lg">Loading welfare requests...</p>
+              <p className="text-gray-600 text-lg">
+                Loading welfare requests...
+              </p>
             </div>
           </div>
         ) : requests.length === 0 ? (
@@ -260,14 +278,12 @@ const MemberWelfareFund = () => {
                 No Active Requests
               </h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                There are currently no active welfare requests in your group. 
-                Be the first to create one if you need emergency assistance.
+                There are currently no active welfare requests in your group. Be
+                the first to create one if you need emergency assistance.
               </p>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button 
-                    className="bg-[#1F5A3D] hover:bg-[#1F5A3D]/90 text-white"
-                  >
+                  <Button className="bg-[#1F5A3D] hover:bg-[#1F5A3D]/90 text-white">
                     <FiPlusCircle className="mr-2 h-4 w-4" />
                     Create Request
                   </Button>
@@ -285,7 +301,7 @@ const MemberWelfareFund = () => {
                 Click on any request to contribute and help your community
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {requests.map((request) => (
                 <WelfareRequestCard key={request.id} request={request} />
