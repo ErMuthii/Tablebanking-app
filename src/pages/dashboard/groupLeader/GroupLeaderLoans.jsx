@@ -508,7 +508,7 @@ const Loans = () => {
                         <TableCell className="py-4 text-right">
                           {loan.status === "pending" ? (
                             <div className="flex justify-end gap-2">
-                              <AlertDialog>
+                              <AlertDialog >
                                 <AlertDialogTrigger asChild>
                                   <Button
                                     size="sm"
@@ -529,7 +529,7 @@ const Loans = () => {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle className="flex items-center space-x-2 text-green-600">
+                                    <AlertDialogTitle className=" flex items-center space-x-2 text-green-600">
                                       <CheckCircle className="w-5 h-5" />
                                       <span>Approve Loan</span>
                                     </AlertDialogTitle>
