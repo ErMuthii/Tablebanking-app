@@ -40,11 +40,7 @@ const DropdownOption = ({ icon: Icon, label, to, variant = "default" }) => (
 
 function AccountToggle({ user }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const displayName =
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email?.split("@")[0] ||
-    "User";
+  const displayName = user?.email || "User";
 
   return (
     <div className="mb-2">

@@ -277,7 +277,12 @@ const ActivityItem = ({ activity }) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <p className="text-sm font-medium text-gray-900">{activity.user}</p>
-          {getActivityBadge(activity.type)}
+          {activity.status === "approved" && (
+            <Badge className="bg-green-100 text-green-800">Approved</Badge>
+          )}
+          {activity.status === "declined" && (
+            <Badge className="bg-red-100 text-red-800">Declined</Badge>
+          )}
         </div>
         <p className="text-sm text-gray-600 mb-1">{activity.description}</p>
         <p className="text-xs text-gray-500">{activity.time}</p>
@@ -377,6 +382,21 @@ const GroupHome = () => {
   const [error, setError] = useState(null);
   const [metrics, setMetrics] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [fullName, setFullName] = useState("");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user?.id) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
+        if (data?.full_name) setFullName(data.full_name);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -505,8 +525,16 @@ const GroupHome = () => {
         const mappedLoans = loanActivity.map((a) => ({
           id: a.id,
           user: a.group_members.profiles.full_name,
-          type: a.status === "pending" ? "loan_request" : "loan_approved",
+          type:
+            a.status === "pending"
+              ? "loan_request"
+              : a.status === "approved"
+              ? "loan_approved"
+              : a.status === "declined"
+              ? "loan_declined"
+              : "loan_other",
           description: `Loan for ${a.purpose} KSh ${a.amount} was ${a.status}`,
+          status: a.status,
           time: new Date(a.requested_at).toLocaleDateString(),
         }));
 
@@ -648,7 +676,7 @@ const GroupHome = () => {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-              Welcome back, {user.user_metadata?.full_name || "User"}!
+              Welcome back, {fullName || "User"}!
             </h1>
             <p className="text-gray-600">
               Managing{" "}
