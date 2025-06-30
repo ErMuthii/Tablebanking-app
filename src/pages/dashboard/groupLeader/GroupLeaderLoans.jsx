@@ -149,21 +149,21 @@ const Loans = () => {
     switch (statusLower) {
       case "approved":
         return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-300">
             <CheckCircle className="w-3 h-3 mr-1" />
             Approved
           </Badge>
         );
       case "declined":
         return (
-          <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
+          <Badge className="bg-red-100 text-red-800 hover:bg-red-300">
             <XCircle className="w-3 h-3 mr-1" />
             Declined
           </Badge>
         );
       case "pending":
         return (
-          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-300">
             <Clock className="w-3 h-3 mr-1" />
             Pending
           </Badge>
@@ -527,7 +527,7 @@ const Loans = () => {
                                     )}
                                   </Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent>
+                                <AlertDialogContent className="bg-white rounded-xl shadow-xl">
                                   <AlertDialogHeader>
                                     <AlertDialogTitle className=" flex items-center space-x-2 text-green-600">
                                       <CheckCircle className="w-5 h-5" />
@@ -582,7 +582,7 @@ const Loans = () => {
                                     </div>
                                   </Button>
                                 </AlertDialogTrigger>
-                                <AlertDialogContent>
+                                <AlertDialogContent className="bg-white rounded-xl shadow-xl" >
                                   <AlertDialogHeader>
                                     <AlertDialogTitle className="flex items-center space-x-2 text-red-600">
                                       <XCircle className="w-5 h-5" />
