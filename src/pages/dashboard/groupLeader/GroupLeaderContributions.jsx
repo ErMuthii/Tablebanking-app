@@ -132,35 +132,34 @@ const GroupLeaderContributions = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const [groupMemberId] = await getMyGroupMemberIds();
-    if (!groupMemberId) return;
+  e.preventDefault();
 
+  try {
     const res = await fetch("http://localhost:4000/stk-push", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone: formData.phone, amount: formData.amount }),
+      body: JSON.stringify({
+        phone: formData.phone.replace(/[^0-9]/g, "").replace(/^0/, "254"),
+        amount: formData.amount,
+      }),
     });
 
     const data = await res.json();
-    if (data.ResponseCode === "0") {
-      await supabase.from("contributions").insert([
-        {
-          group_member_id: groupMemberId,
-          amount: Number(formData.amount),
-          type: "monthly",
-          date_contributed: new Date().toISOString().split("T")[0],
-        },
-      ]);
 
+    if (data.ResponseCode === "0") {
+      alert("STK Push sent. Enter your M-Pesa PIN to complete the payment.");
       setDialogOpen(false);
       setFormData({ phone: "", amount: "" });
-      fetchMyContributions();
-      fetchGroupContributions();
     } else {
       console.error("STK Push failed", data);
+      alert("STK Push failed. Please check the number and try again.");
     }
-  };
+  } catch (err) {
+    console.error("STK request error:", err);
+    alert("Something went wrong while sending the STK Push.");
+  }
+};
+
 
   const groupColumns = [
     { 
@@ -538,22 +537,25 @@ const GroupLeaderContributions = () => {
                 </div>
               </div>
               
-              <DialogFooter className="flex flex-col space-y-3">
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 py-3 text-base font-semibold"
-                >
-                  Process Payment
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                  className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </Button>
-              </DialogFooter>
+              <DialogFooter>
+  <div className="flex flex-col gap-3 w-full">
+    <Button
+      type="submit"
+      className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 py-3 text-base font-semibold"
+    >
+      Process Payment
+    </Button>
+    <Button
+      type="button"
+      variant="outline"
+      onClick={() => setDialogOpen(false)}
+      className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
+    >
+      Cancel
+    </Button>
+  </div>
+</DialogFooter>
+
             </form>
           </DialogContent>
         </Dialog>
