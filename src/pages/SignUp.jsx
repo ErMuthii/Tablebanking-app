@@ -12,6 +12,7 @@ const SignUp = () => {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     role: "",
     password: "",
     confirmPassword: "",
@@ -38,10 +39,12 @@ const SignUp = () => {
 
     setLoading(true);
     // 1. Sign up with Supabase Auth
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-    });
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
+      {
+        email: form.email,
+        password: form.password,
+      }
+    );
 
     if (signUpError) {
       setError(signUpError.message);
@@ -51,14 +54,13 @@ const SignUp = () => {
 
     // 2. Insert profile record
     const userId = signUpData.user.id;
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .insert({
-        id: userId,
-        full_name: `${form.firstName} ${form.lastName}`,
-        role: form.role,
-        email: form.email,
-      });
+    const { error: profileError } = await supabase.from("profiles").insert({
+      id: userId,
+      full_name: `${form.firstName} ${form.lastName}`,
+      role: form.role,
+      email: form.email,
+      phone: form.phone,
+    });
 
     if (profileError) {
       setError("Could not create user profile");
@@ -67,7 +69,11 @@ const SignUp = () => {
     }
 
     // 3. Redirect to welcome or dashboard
-    navigate("/welcome");
+    if (form.role === "member") {
+      navigate("/dashboard/member");
+    } else if (form.role === "group_leader") {
+      navigate("/dashboard/groupLeader");
+    }
   };
 
   return (
@@ -114,6 +120,19 @@ const SignUp = () => {
                 value={form.email}
                 onChange={handleChange}
                 required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                required
+                placeholder="e.g. +254712345678"
               />
             </div>
 

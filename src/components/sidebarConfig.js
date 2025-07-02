@@ -1,111 +1,93 @@
 import {
-  HomeIcon,
-  CalendarDaysIcon,
-  CurrencyDollarIcon,
-  ArrowPathIcon,
-  HeartIcon,
-  UsersIcon,
-  ChartBarIcon,
-  UserGroupIcon,
-  CheckBadgeIcon,
-  ArrowTrendingUpIcon,
-} from "@heroicons/react/24/outline";
+  FiHome,
+  FiUsers,
+  FiClipboard,
+  FiTrendingUp,
+  FiDollarSign,
+  FiSettings,
+  FiHelpCircle,
+  FiCheckSquare,
+  FiCalendar,
+  FiBarChart2,
+  FiInfo,
+  FiHeart,
+} from "react-icons/fi";
 
 export const sidebarConfig = {
   member: [
-    { label: "Home", path: "/dashboard/member", icon: HomeIcon },
+    { title: "Home", path: "/dashboard/member", icon: FiHome },
     {
-      label: "My Contributions",
-      path: "/dashboard/member/contributions",
-      icon: CurrencyDollarIcon,
-    },
-
-    {
-      label: "Loans",
-      path: "/dashboard/member/loans",
-      icon: CurrencyDollarIcon,
-    },
-    {
-      label: "Merry-Go-Round",
-      path: "/dashboard/member/merrygo",
-      icon: ArrowPathIcon,
-    },
-    {
-      label: "Welfare Fund",
-      path: "/dashboard/member/welfare",
-      icon: HeartIcon,
-    },
-    {
-      label: "Meetings",
+      title: "Meetings",
       path: "/dashboard/member/meetings",
-      icon: CalendarDaysIcon,
+      icon: FiCalendar,
+    },
+    { title: "Loans", path: "/dashboard/member/loans", icon: FiDollarSign },
+    {
+      title: "Merry-Go-Round",
+      path: "/dashboard/member/merrygo",
+      icon: FiClipboard,
     },
     {
-      label: "Group Info",
+      title: "My Contributions",
+      path: "/dashboard/member/contributions",
+      icon: FiTrendingUp,
+    },
+    {
+      title: "Welfare Fund",
+      path: "/dashboard/member/welfare",
+      icon: FiHeart,
+    },
+    {
+      title: "Group Information",
       path: "/dashboard/member/group-info",
-      icon: UsersIcon, // or use InformationCircleIcon
+      icon: FiInfo,
+    },
+    {
+      title: "Profile Settings",
+      path: "/dashboard/member/profile",
+      icon: FiSettings,
+      group: "account",
+    },
+    {
+      title: "Help & Support",
+      path: "/dashboard/member/help",
+      icon: FiHelpCircle,
+      group: "account",
     },
   ],
-
   group_leader: [
-    // start with everything a member sees…
-    ...[
-      { label: "Home", path: "/dashboard/leader", icon: HomeIcon },
-        {
-    label: "My Contributions",
-    path: "/dashboard/leader/contributions",
-    icon: CurrencyDollarIcon,
-  },
-      {
-        label: "Meetings",
-        path: "/dashboard/leader/meetings",
-        icon: UsersIcon,
-      },
-      {
-        label: "Loans",
-        path: "/dashboard/leader/loans",
-        icon: CurrencyDollarIcon,
-      },
-
-      {
-        label: "Merry-Go-Round",
-        path: "/dashboard/leader/merry-go-round",
-        icon: ArrowTrendingUpIcon,
-      },
-
-{
-  label: "Welfare Fund",
-  path: "/dashboard/leader/welfare-fund",
-  icon: HeartIcon // or any other icon you're using from lucide-react
-},
-    ],
-    // …plus leader-only links
+    { title: "Home", path: "/dashboard/leader", icon: FiHome },
     {
-      label: "Membership",
+      title: "Membership",
       path: "/dashboard/leader/membership",
-      icon: UsersIcon,
-      group: "management",
+      icon: FiUsers,
     },
+    { title: "Meetings", path: "/dashboard/leader/meetings", icon: FiCalendar },
+    { title: "Loans", path: "/dashboard/leader/loans", icon: FiDollarSign },
     {
-      label: "Attendance",
+      title: "Attendance",
       path: "/dashboard/leader/attendance",
-      icon: CheckBadgeIcon,
-      group: "management",
+      icon: FiCheckSquare,
     },
     {
-      label: "Reports",
-      path: "/dashboard/leader/reports",
-      icon: ChartBarIcon,
+      title: "Merry-Go-Round",
+      path: "/dashboard/leader/merrygo",
+      icon: FiClipboard,
+    },
+    {
+      title: "Contributions",
+      path: "/dashboard/leader/contributions",
+      icon: FiTrendingUp,
+    },
+    {
+      title: "Welfare Fund",
+      path: "/dashboard/leader/welfare",
+      icon: FiHeart,
     },
   ],
-
   admin: [
-    { label: "Home", path: "/dashboard/admin", icon: HomeIcon },
-    {
-      label: "Manage Groups",
-      path: "/dashboard/admin/groups",
-      icon: UserGroupIcon,
-    },
-    { label: "Reports", path: "/dashboard/admin/reports", icon: ChartBarIcon },
+    { title: "Home", path: "/dashboard/admin", icon: FiHome },
+    { title: "Groups", path: "/dashboard/admin/groups", icon: FiUsers },
+    { title: "Reports", path: "/dashboard/admin/reports", icon: FiBarChart2 },
   ],
 };

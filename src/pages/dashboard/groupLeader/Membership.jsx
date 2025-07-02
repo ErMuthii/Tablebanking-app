@@ -34,7 +34,9 @@ import {
   Mail,
   Crown,
   AlertTriangle,
+  Plus,
 } from "lucide-react";
+import InviteMemberDialog from "@/pages/InviteMemberDialog";
 
 const Membership = () => {
   const { user } = useSession();
@@ -42,6 +44,7 @@ const Membership = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [group, setGroup] = useState(null);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -92,6 +95,18 @@ const Membership = () => {
     fetchMembers();
   }, []);
 
+  useEffect(() => {
+    const fetchGroup = async () => {
+      const { data: groups } = await supabase
+        .from("groups")
+        .select("*")
+        .eq("created_by", user.id)
+        .single();
+      setGroup(groups);
+    };
+    if (user) fetchGroup();
+  }, [user]);
+
   const handleDelete = async (id, memberName) => {
     setDeletingId(id);
 
@@ -132,7 +147,14 @@ const Membership = () => {
           </Badge>
         );
       case "inactive":
-        return <Badge className="bg-red-100 text-red-900 hover:bg-red-300"variant="secondary">Inactive</Badge>;
+        return (
+          <Badge
+            className="bg-red-100 text-red-900 hover:bg-red-300"
+            variant="secondary"
+          >
+            Inactive
+          </Badge>
+        );
       default:
         return (
           <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
@@ -193,16 +215,20 @@ const Membership = () => {
     <div className="min-h-screen rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[#1F5A3D] rounded-lg">
-              <Users className="w-6 h-6 text-white" />
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-[#1F5A3D] rounded-lg">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-[#1F5A3D]">
+                Group Members
+              </h1>
             </div>
-            <h1 className="text-3xl font-bold text-[#1F5A3D]">Group Members</h1>
+            <p className="text-gray-600">
+              Manage your group members and their access permissions
+            </p>
           </div>
-          <p className="text-gray-600">
-            Manage your group members and their access permissions
-          </p>
         </div>
 
         {/* Stats Card */}
@@ -273,14 +299,12 @@ const Membership = () => {
 
         {/* Main Content Card */}
         <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-          <CardHeader className="border-b border-gray-100 bg-white/50">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <CardTitle className="text-xl font-semibold text-[#1F5A3D]">
-                Member Management
-              </CardTitle>
-
-              {/* Search Input */}
-              <div className="relative max-w-sm">
+          <CardHeader className="border-b border-gray-100 bg-white/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="text-xl font-semibold text-[#1F5A3D]">
+              Member Management
+            </CardTitle>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <div className="relative max-w-sm w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   type="text"
@@ -290,6 +314,18 @@ const Membership = () => {
                   className="pl-10 border-gray-200 focus:border-[#1F5A3D] focus:ring-[#1F5A3D]"
                 />
               </div>
+              {group && user && (
+                <InviteMemberDialog
+                  group={group}
+                  user={user}
+                  trigger={
+                    <Button className="ml-2 flex items-center gap-2 bg-[#1F5A3D] text-white hover:bg-[#17432e] transition-colors duration-200">
+                      <Plus className="w-4 h-4" />
+                      Invite Member
+                    </Button>
+                  }
+                />
+              )}
             </div>
           </CardHeader>
 

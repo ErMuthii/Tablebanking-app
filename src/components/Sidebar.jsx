@@ -40,11 +40,7 @@ const DropdownOption = ({ icon: Icon, label, to, variant = "default" }) => (
 
 function AccountToggle({ user }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const displayName =
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email?.split("@")[0] ||
-    "User";
+  const displayName = user?.email || "User";
 
   return (
     <div className="mb-2">
@@ -74,8 +70,16 @@ function AccountToggle({ user }) {
 
       {isExpanded && (
         <div className="mt-3 pl-3 space-y-1 animate-in slide-in-from-top-2 duration-200 fade-in-50">
-          <DropdownOption icon={FiUser} label="Profile Settings" to="/dashboard/member/profile" />
-          <DropdownOption icon={FiHelpCircle} label="Help & Support" to="/dashboard/member/help" />
+          <DropdownOption
+            icon={FiUser}
+            label="Profile Settings"
+            to="/dashboard/member/profile"
+          />
+          <DropdownOption
+            icon={FiHelpCircle}
+            label="Help & Support"
+            to="/dashboard/member/help"
+          />
         </div>
       )}
     </div>
@@ -120,10 +124,12 @@ function NavItem({ item }) {
         <>
           <Icon
             className={`h-5 w-5 transition-transform group-hover:scale-110 ${
-              isActive ? "text-white" : "text-gray-500 group-hover:text-[#1F5A3D]"
+              isActive
+                ? "text-white"
+                : "text-gray-500 group-hover:text-[#1F5A3D]"
             }`}
           />
-          <span className="font-medium">{label}</span>
+          <span className="font-medium">{item.title}</span>
           {badge && (
             <span
               className={`ml-auto px-2 py-0.5 text-xs rounded-full font-medium ${
@@ -147,8 +153,12 @@ export function Sidebar() {
 
   const filteredItems = sidebarConfig[role] || [];
   const mainItems = filteredItems.filter((item) => !item.group);
-  const managementItems = filteredItems.filter((item) => item.group === "management");
-  const settingsItems = filteredItems.filter((item) => item.group === "settings");
+  const managementItems = filteredItems.filter(
+    (item) => item.group === "management"
+  );
+  const settingsItems = filteredItems.filter(
+    (item) => item.group === "settings"
+  );
 
   const handleLogout = async () => {
     try {
@@ -168,7 +178,9 @@ export function Sidebar() {
             <FiCommand className="w-6 h-6 text-white drop-shadow-sm" />
           </div>
           <div className="flex-1">
-            <h1 className="font-bold text-xl text-gray-900 tracking-tight">TableBank</h1>
+            <h1 className="font-bold text-xl text-gray-900 tracking-tight">
+              TableBank
+            </h1>
             <p className="text-sm text-gray-500 capitalize font-medium">
               {role || "Member"} Dashboard
             </p>
@@ -180,8 +192,12 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 pt-3 space-y-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
         <NavGroup title="MENU" items={mainItems} />
-        {managementItems.length > 0 && <NavGroup title="Management" items={managementItems} />}
-        {settingsItems.length > 0 && <NavGroup title="Settings" items={settingsItems} />}
+        {managementItems.length > 0 && (
+          <NavGroup title="Management" items={managementItems} />
+        )}
+        {settingsItems.length > 0 && (
+          <NavGroup title="Settings" items={settingsItems} />
+        )}
       </nav>
 
       {/* Footer */}

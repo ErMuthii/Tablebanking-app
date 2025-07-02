@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { supabase } from "@/SupabaseClient";
 import { useSession } from "@/hooks/useSession";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -10,26 +9,29 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { toast } from "sonner";
+import { Loader2, Users, ArrowRight } from "lucide-react";
 
 export const JoinGroup = ({ onGroupJoined }) => {
   const { user } = useSession();
   const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleJoinGroup = async (e) => {
-    e.preventDefault();
+  const handleJoinGroup = async () => {
     console.log("Attempting to join group...");
 
-    if (!inviteCode.trim()) {
-      toast.error("Please enter an invite code.");
-      console.log("Exited: No invite code provided.");
+    if (!inviteCode.trim() || inviteCode.length !== 6) {
+      toast.error("Please enter a complete 6-character invite code.");
+      console.log("Exited: Invalid invite code provided.");
       return;
     }
     setLoading(true);
 
-    // 1. Find the group with the invite code
-    console.log(`Searching for group with invite code: ${inviteCode.trim()}`);
     const { data: groups, error: groupError } = await supabase
       .from("groups")
       .select("id")
@@ -46,8 +48,6 @@ export const JoinGroup = ({ onGroupJoined }) => {
     const group = groups[0];
     console.log(`Found group with ID: ${group.id}`);
 
-    // 2. Add the user to the group
-    console.log(`Attempting to add user ${user.id} to group ${group.id}`);
     const { data: membership, error: insertError } = await supabase
       .from("group_members")
       .insert({
@@ -67,32 +67,130 @@ export const JoinGroup = ({ onGroupJoined }) => {
       if (onGroupJoined) {
         onGroupJoined(membership);
       }
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-green-50 min-h-screen py-8">
-      <div className="max-w-2xl mx-auto">
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Join a Group</CardTitle>
-            <CardDescription>
-              Enter the invite code provided by your group leader to join.
-            </CardDescription>
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      
+    >
+      <div className="w-full max-w-md">
+        <Card className="border-0 shadow-xl bg-white/95 backdrop-blur-sm">
+          <CardHeader className="text-center space-y-4 pb-8">
+            <div
+              className="w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"
+              style={{ backgroundColor: "#1F5A3D" }}
+            >
+              <Users className="w-8 h-8 text-white" />
+            </div>
+            <div className="space-y-2">
+              <CardTitle
+                className="text-2xl font-bold"
+                style={{ color: "#1F5A3D" }}
+              >
+                Join a Group
+              </CardTitle>
+              <CardDescription className="text-gray-600 text-base leading-relaxed">
+                Enter the 6-character invite code provided by your group leader
+              </CardDescription>
+            </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleJoinGroup} className="space-y-4">
-              <Input
-                placeholder="Enter invite code"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                disabled={loading}
-                maxLength="6"
-              />
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Joining Group..." : "Join Group"}
+
+          <CardContent className="space-y-8">
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <label
+                  className="text-sm font-medium block text-center"
+                  style={{ color: "#1F5A3D" }}
+                >
+                  Invite Code
+                </label>
+                <div className="flex justify-center">
+                  <InputOTP
+                    maxLength={6}
+                    value={inviteCode}
+                    onChange={(value) => setInviteCode(value.toUpperCase())}
+                    disabled={loading}
+                    className="gap-2"
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot
+                        index={0}
+                        className="w-12 h-12 text-lg font-bold border-2 rounded-lg focus:border-[#1F5A3D] focus:ring-1 focus:ring-[#1F5A3D]/20"
+                      />
+                      <InputOTPSlot
+                        index={1}
+                        className="w-12 h-12 text-lg font-bold border-2 rounded-lg focus:border-[#1F5A3D] focus:ring-2 focus:ring-[#1F5A3D]/20"
+                      />
+                      <InputOTPSlot
+                        index={2}
+                        className="w-12 h-12 text-lg font-bold border-2 rounded-lg focus:border-[#1F5A3D] focus:ring-2 focus:ring-[#1F5A3D]/20"
+                      />
+                    </InputOTPGroup>
+                    <InputOTPGroup>
+                      <InputOTPSlot
+                        index={3}
+                        className="w-12 h-12 text-lg font-bold border-2 rounded-lg focus:border-[#1F5A3D] focus:ring-2 focus:ring-[#1F5A3D]/20"
+                      />
+                      <InputOTPSlot
+                        index={4}
+                        className="w-12 h-12 text-lg font-bold border-2 rounded-lg focus:border-[#1F5A3D] focus:ring-2 focus:ring-[#1F5A3D]/20"
+                      />
+                      <InputOTPSlot
+                        index={5}
+                        className="w-12 h-12 text-lg font-bold border-2 rounded-lg focus:border-[#1F5A3D] focus:ring-2 focus:ring-[#1F5A3D]/20"
+                      />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleJoinGroup}
+                className="w-full h-12 text-base font-semibold rounded-lg transition-all duration-200 hover:shadow-lg disabled:opacity-50"
+                style={{
+                  backgroundColor: "#1F5A3D",
+                  color: "white",
+                }}
+                disabled={loading || inviteCode.length !== 6}
+                onMouseEnter={(e) => {
+                  if (!loading && inviteCode.length === 6) {
+                    e.target.style.backgroundColor = "#164430";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) {
+                    e.target.style.backgroundColor = "#1F5A3D";
+                  }
+                }}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Joining Group...
+                  </>
+                ) : (
+                  <>
+                    Join Group
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
-            </form>
+            </div>
+
+            <div className="text-center">
+              <p className="text-sm text-gray-500">
+                Don't have an invite code?{" "}
+                <button
+                  className="font-medium hover:underline"
+                  style={{ color: "#1F5A3D" }}
+                >
+                  Contact your group leader
+                </button>
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

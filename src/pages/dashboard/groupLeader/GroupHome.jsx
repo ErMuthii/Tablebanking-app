@@ -23,6 +23,8 @@ import {
   FiFileText,
 } from "react-icons/fi";
 import { cn } from "@/lib/utils";
+import { CreateGroup } from "@/components/CreateGroup";
+import { useSession } from "@/hooks/useSession";
 
 const SkeletonPulse = ({ className }) => (
   <div className={cn("animate-pulse rounded-md bg-gray-200", className)} />
@@ -278,7 +280,12 @@ const ActivityItem = ({ activity }) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <p className="text-sm font-medium text-gray-900">{activity.user}</p>
-          {getActivityBadge(activity.type)}
+          {activity.status === "approved" && (
+            <Badge className="bg-green-100 text-green-800">Approved</Badge>
+          )}
+          {activity.status === "declined" && (
+            <Badge className="bg-red-100 text-red-800">Declined</Badge>
+          )}
         </div>
         <p className="text-sm text-gray-600 mb-1">{activity.description}</p>
         <p className="text-xs text-gray-500">{activity.time}</p>
@@ -369,67 +376,78 @@ const AlertCard = ({ alert }) => {
 
 const GroupHome = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, loading: userLoading } = useSession();
   const [group, setGroup] = useState(null);
   const [stats, setStats] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [metrics, setMetrics] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [fullName, setFullName] = useState("");
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user?.id) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
+        if (data?.full_name) setFullName(data.full_name);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        setLoading(true);
+      setLoading(true);
+      setError(null);
 
-        // 1. Get current user
+      try {
         const {
           data: { user },
+          error: userError,
         } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error("User not authenticated.");
-        }
-        setUser(user);
+        if (userError || !user) throw new Error("User not authenticated.");
 
-        // 2. Get user's profile to find their group
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("full_name, id")
-          .eq("id", user.id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        // 3. Find the group where the user is a group leader
-        const { data: groupMember, error: groupMemberError } = await supabase
-          .from("group_members")
-          .select("group_id")
-          .eq("member_id", user.id)
-          .in("role", ["group_leader", "leader"])
-          .single();
-
-        if (groupMemberError)
-          throw new Error("Could not find group for the user.");
-        if (!groupMember)
-          throw new Error("User is not a group leader of any group.");
-
-        const groupId = groupMember.group_id;
-
-        // 4. Fetch group details
+        // Check if user has a group
         const { data: groupData, error: groupError } = await supabase
           .from("groups")
-          .select("name, invite_code")
-          .eq("id", groupId)
+          .select("*")
+          .eq("created_by", user.id)
           .single();
 
-        if (groupError) throw groupError;
+        if (groupError || !groupData) {
+          if (groupError && groupError.code !== "PGRST116") {
+            // PGRST116 means no rows found, which is okay for a new leader
+            throw new Error("Could not fetch group data.");
+          }
+          // No group found, so we don't set an error, just leave group as null
+          setGroup(null);
+          setLoading(false);
+          return;
+        }
+
         setGroup(groupData);
+
+        // --- Fetch other data only if group exists ---
+        const today = new Date();
+        const options = {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        };
+        const formattedDate = today.toLocaleDateString("en-US", options);
 
         // 5. Fetch stats
         const { data: members, error: membersError } = await supabase
           .from("group_members")
           .select("id")
-          .eq("group_id", groupId);
+          .eq("group_id", groupData.id);
 
         if (membersError) throw membersError;
         const memberIds = members.map((m) => m.id);
@@ -510,8 +528,16 @@ const GroupHome = () => {
         const mappedLoans = loanActivity.map((a) => ({
           id: a.id,
           user: a.group_members.profiles.full_name,
-          type: a.status === "pending" ? "loan_request" : "loan_approved",
+          type:
+            a.status === "pending"
+              ? "loan_request"
+              : a.status === "approved"
+              ? "loan_approved"
+              : a.status === "declined"
+              ? "loan_declined"
+              : "loan_other",
           description: `Loan for ${a.purpose} KSh ${a.amount} was ${a.status}`,
+          status: a.status,
           time: new Date(a.requested_at).toLocaleDateString(),
         }));
 
@@ -535,7 +561,7 @@ const GroupHome = () => {
         const { data: meetings, error: meetingsError } = await supabase
           .from("meetings")
           .select("title, meeting_date, location, starts_at")
-          .eq("group_id", groupId)
+          .eq("group_id", groupData.id)
           .gte("meeting_date", new Date().toISOString())
           .order("meeting_date", { ascending: true })
           .limit(1);
@@ -562,27 +588,51 @@ const GroupHome = () => {
         }
 
         setAlerts(newAlerts);
+
+        // --- End of data fetching ---
+        setLoading(false);
       } catch (error) {
         setError(error.message);
         console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchData();
   }, []);
 
-  if (loading) {
+  const handleCopyInviteCode = () => {
+    if (group && group.invite_code) {
+      navigator.clipboard.writeText(group.invite_code);
+      // toast.success("Invite code copied to clipboard!");
+    }
+  };
+
+  if (loading || userLoading) {
     return <GroupHomeSkeleton />;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-8 bg-white rounded-lg shadow-md">
+          <FiAlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-red-700 mb-2">
+            An Error Occurred
+          </h2>
+          <p className="text-gray-600">{error.message}</p>
+          <Button
+            onClick={() => window.location.reload()}
+            className="mt-6 bg-[#1F5A3D] hover:bg-[#1A4C32] text-white"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
   }
 
-  if (!group || !user || !stats) {
-    return <div>No group or user data.</div>;
+  if (!group) {
+    return <CreateGroup onGroupCreated={() => window.location.reload()} />;
   }
 
   const dashboardMetrics = [
@@ -620,21 +670,7 @@ const GroupHome = () => {
     },
   ];
 
-  const today = new Date();
-  const options = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  };
-  const formattedDate = today.toLocaleDateString("en-US", options);
-
-  const handleCopyInviteCode = () => {
-    if (group && group.invite_code) {
-      navigator.clipboard.writeText(group.invite_code);
-      // toast.success("Invite code copied to clipboard!");
-    }
-  };
+  const formattedDate = new Date(group.created_at).toLocaleDateString();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
@@ -643,7 +679,7 @@ const GroupHome = () => {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-              Welcome back, {user.user_metadata?.full_name || "User"}!
+              Welcome back, {fullName || "User"}!
             </h1>
             <p className="text-gray-600">
               Managing{" "}
