@@ -168,14 +168,16 @@ const MetricCard = React.memo(({ metric }) => {
   const trendBg = trend?.direction === "up" ? "bg-emerald-100" : "bg-red-100";
 
   return (
-    <Card className="transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer shadow-lg border-0 bg-white flex flex-col justify-between">
-      <CardContent className="p-6">
+    <Card className="transition-all duration-300 hover:shadow-xl hover:scale-[1.02] shadow-lg border border-gray-200 bg-white flex flex-col justify-between">
+      <CardContent className="p-4 min-h-[130px] flex flex-col justify-between">
         <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="p-3 bg-gray-50 rounded-xl">
               <Icon className="w-6 h-6 text-[#1F5A3D]" />
             </div>
-            <h3 className="text-sm font-medium text-gray-600">{title}</h3>
+            <h3 className="text-sm font-medium text-gray-600 truncate max-w-[130px]">
+              {title}
+            </h3>
           </div>
           {trend && (
             <div
@@ -189,19 +191,20 @@ const MetricCard = React.memo(({ metric }) => {
           )}
         </div>
         <div className="pl-16 mt-1">
-          <p
-            className={`${
-              typeof value === "number" ? "text-2xl" : "text-xl"
-            } font-bold text-gray-900`}
-          >
+          <p className="text-xl font-bold text-gray-900 break-words">
             {formatValue(value)}
           </p>
-          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+              {subtitle}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
   );
 });
+
 
 const ActivityItem = ({ activity }) => {
   const getActivityIcon = (type) => {

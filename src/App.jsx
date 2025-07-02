@@ -15,7 +15,7 @@ import AdminDashboard from "./pages/dashboard/admin/AdminDashboard";
 // Member Pages
 import MemberHome from "./pages/dashboard/member/MemberHome";
 import Meetings from "./pages/dashboard/member/Meetings";
-import MemberLoans from "./pages/dashboard/member/GroupMemberLoans";
+import MemberLoans from "./pages/dashboard/member/MemberLoans";
 import MemberMerryGo from "./pages/dashboard/member/MemberMerryGo";
 import MyContributions from "./pages/dashboard/member/MemberContributions";
 import WelfareFund from "./pages/dashboard/member/MemberWelfareFund";
@@ -118,12 +118,16 @@ export default function App() {
                   <Route path="loans" element={<GroupLeaderLoans />} />
                   <Route path="attendance" element={<AttendancePage />} />
                   <Route path="meetings" element={<GroupLeaderMeetings />} />
+
                   <Route
                     path="contributions"
                     element={<GroupLeaderContributions />}
                   />
                   <Route path="merrygo" element={<GroupLeaderMerryGo />} />
                   <Route path="welfare" element={<GroupLeaderWelfareFund />} />
+
+                  <Route path="contributions" element={<GroupLeaderContributions />} />
+                  <Route path="merry-go-round" element={<GroupLeaderMerryGo />} />
                 </Route>
 
                 {/* Admin Dashboard Routes */}
