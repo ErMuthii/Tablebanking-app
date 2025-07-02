@@ -130,116 +130,108 @@ const LoanApplicationForm = ({ groupId, onSuccess }) => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto p-4 bg-white rounded-lg shadow-md border border-gray-200">
       <Card className="shadow-none border-0">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-3">
-            <div className="p-3 rounded-full bg-[#1F5A3D]/10">
-              <DollarSign className="h-7 w-7 text-[#1F5A3D]" />
+        <CardHeader className="text-center pb-2">
+          <div className="flex justify-center mb-2">
+            <div className="p-2 rounded-full bg-[#1F5A3D]/10">
+              <DollarSign className="h-6 w-6 text-[#1F5A3D]" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-[#1F5A3D] mb-1">
+          <CardTitle className="text-xl font-bold text-[#1F5A3D] mb-0.5">
             Loan Application
           </CardTitle>
-          <CardDescription className="text-base text-gray-600">
-            Submit your loan request with the details below
+          <CardDescription className="text-sm text-gray-600">
+            Submit your loan request below
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="pt-4">
-          <div className="space-y-4">
+        <CardContent className="pt-2">
+          <div className="space-y-3">
             {/* Amount Field */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label
                 htmlFor="amount"
-                className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                className="text-xs font-semibold text-gray-700 flex items-center gap-1"
               >
-                <DollarSign className="h-4 w-4 text-[#1F5A3D]" />
+                <DollarSign className="h-3 w-3 text-[#1F5A3D]" />
                 Loan Amount
               </Label>
               <Input
                 id="amount"
                 type="number"
-                placeholder="Enter the amount you need"
+                placeholder="Amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
-                className="h-11 text-base border-2 border-gray-200 focus:border-[#1F5A3D] focus:ring-[#1F5A3D]/20 transition-all duration-200"
+                className="h-9 text-sm border-2 border-gray-200 focus:border-[#1F5A3D] focus:ring-[#1F5A3D]/20"
                 min="1"
                 step="0.01"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Enter the exact amount you wish to borrow
-              </p>
             </div>
 
             {/* Purpose Field */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label
                 htmlFor="purpose"
-                className="text-sm font-semibold text-gray-700 flex items-center gap-2"
+                className="text-xs font-semibold text-gray-700 flex items-center gap-1"
               >
-                <FileText className="h-4 w-4 text-[#1F5A3D]" />
-                Purpose of Loan
+                <FileText className="h-3 w-3 text-[#1F5A3D]" />
+                Purpose
               </Label>
               <Textarea
                 id="purpose"
-                placeholder="Describe how you plan to use this loan..."
+                placeholder="Loan purpose..."
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
                 required
-                className="min-h-[100px] text-base border-2 border-gray-200 focus:border-[#1F5A3D] focus:ring-[#1F5A3D]/20 transition-all duration-200 resize-none"
+                className="min-h-[60px] text-sm border-2 border-gray-200 focus:border-[#1F5A3D] focus:ring-[#1F5A3D]/20 resize-none"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Provide a clear explanation for your loan request
-              </p>
             </div>
 
             {/* Loan Terms Info */}
-            <Alert className="border-[#1F5A3D]/20 bg-[#1F5A3D]/5">
-              <Clock className="h-4 w-4 text-[#1F5A3D]" />
-              <AlertDescription className="text-[#1F5A3D]">
-                <strong>Loan Terms:</strong> Your loan will be due 32 days from
-                approval date. Interest rates and repayment schedule will be
-                determined by group policies.
+            <Alert className="border-[#1F5A3D]/20 bg-[#1F5A3D]/5 py-1 px-2">
+              <Clock className="h-3 w-3 text-[#1F5A3D]" />
+              <AlertDescription className="text-xs text-[#1F5A3D]">
+                <strong>Terms:</strong> Loan due in 32 days. Interest and repayment per group policy.
               </AlertDescription>
             </Alert>
 
             {/* Status Badges */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1">
               <Badge
                 variant="outline"
-                className="border-[#1F5A3D] text-[#1F5A3D] bg-[#1F5A3D]/5"
+                className="border-[#1F5A3D] text-[#1F5A3D] bg-[#1F5A3D]/5 text-xs px-2 py-0.5"
               >
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Member Verified
               </Badge>
               <Badge
                 variant="outline"
-                className="border-orange-500 text-orange-700 bg-orange-50"
+                className="border-orange-500 text-orange-700 bg-orange-50 text-xs px-2 py-0.5"
               >
                 <Clock className="h-3 w-3 mr-1" />
                 Pending Review
               </Badge>
             </div>
 
-            <Separator />
+            <Separator className="my-1" />
 
             {/* Submit Button */}
             <Button
               onClick={handleSubmit}
               disabled={loading || !amount || !purpose}
-              className="w-full h-11 text-base font-semibold bg-[#1F5A3D] hover:bg-[#1F5A3D]/90 text-white shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-9 text-sm font-semibold bg-[#1F5A3D] hover:bg-[#1F5A3D]/90 text-white shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                <div className="flex items-center justify-center gap-1">
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Submitting...</span>
                 </div>
               ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  <span>Submit Loan Application</span>
+                <div className="flex items-center justify-center gap-1">
+                  <DollarSign className="h-4 w-4" />
+                  <span>Submit</span>
                 </div>
               )}
             </Button>
