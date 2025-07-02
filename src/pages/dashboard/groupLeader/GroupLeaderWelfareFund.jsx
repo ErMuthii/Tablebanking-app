@@ -121,7 +121,7 @@ const WelfareRequestCard = ({ request, onApprove, onReject, isLeader }) => {
             </Button>
             <Button
               onClick={() => onReject(request.id)}
-              className="flex-1"
+              className="flex-1 bg-red-600 hover:bg-red-700"
               variant="destructive"
               size="sm"
             >

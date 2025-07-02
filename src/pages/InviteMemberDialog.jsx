@@ -34,7 +34,8 @@ export default function InviteMemberDialog({ group, user, trigger }) {
 
   const handleInvite = async () => {
     setLoading(true);
-    const { error } = await supabase.functions.invoke("resend-email", {
+    console.log("[InviteMemberDialog] Sending invite to:", email);
+    const { data, error } = await supabase.functions.invoke("resend-email", {
       body: {
         recipientEmail: email,
         inviteCode: group.invite_code,
@@ -42,6 +43,7 @@ export default function InviteMemberDialog({ group, user, trigger }) {
         senderName: fullName || "Group Leader",
       },
     });
+    console.log("[InviteMemberDialog] Edge function response:", data, error);
     setLoading(false);
     if (error) {
       toast.error("Failed to send invite: " + error.message);
