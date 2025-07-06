@@ -23,7 +23,18 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  UserPlus,
+  Users,
 } from "lucide-react";
+import {
+  getAvailableLoanableAmount,
+  getGuarantorCapacity,
+} from "@/lib/loanValidation";
+
+const MAX_GUARANTORS = 3;
+
+const EDGE_FUNCTION_URL =
+  "https://haiwteyfxsxoekzkoeqx.supabase.co/functions/v1/apply-loan";
 
 const LoanApplicationForm = ({ groupId, onSuccess }) => {
   const { user } = useSession();
@@ -32,6 +43,11 @@ const LoanApplicationForm = ({ groupId, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [groupMemberId, setGroupMemberId] = useState(null);
   const [membershipLoading, setMembershipLoading] = useState(true);
+  const [availableLoan, setAvailableLoan] = useState(null);
+  const [shortfall, setShortfall] = useState(0);
+  const [guarantors, setGuarantors] = useState([]); // [{ id, name, amount, capacity }]
+  const [guarantorError, setGuarantorError] = useState("");
+  const [groupMembers, setGroupMembers] = useState([]); // For selecting guarantors
 
   useEffect(() => {
     const fetchGroupMemberId = async () => {
@@ -39,67 +55,177 @@ const LoanApplicationForm = ({ groupId, onSuccess }) => {
         setMembershipLoading(false);
         return;
       }
-
       const { data, error } = await supabase
         .from("group_members")
         .select("id")
         .eq("member_id", user.id)
         .eq("group_id", groupId)
         .single();
-
       setMembershipLoading(false);
-
       if (error) {
         toast.error("You do not appear to be a member of this group.");
       } else if (data) {
         setGroupMemberId(data.id);
       }
     };
-
     fetchGroupMemberId();
   }, [user, groupId]);
+
+  // Fetch available loanable amount
+  useEffect(() => {
+    if (groupMemberId) {
+      getAvailableLoanableAmount(groupMemberId).then(setAvailableLoan);
+    }
+  }, [groupMemberId]);
+
+  // Fetch group members for guarantor selection
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!groupId || !groupMemberId) return;
+      const { data } = await supabase
+        .from("group_members")
+        .select("id, profiles(full_name)")
+        .eq("group_id", groupId);
+      // Exclude self
+      setGroupMembers((data || []).filter((m) => m.id !== groupMemberId));
+    };
+    fetchMembers();
+  }, [groupId, groupMemberId]);
+
+  // Calculate shortfall
+  useEffect(() => {
+    if (!amount || availableLoan === null) {
+      setShortfall(0);
+      return;
+    }
+    const s = Math.max(0, parseFloat(amount) - availableLoan);
+    setShortfall(s);
+    if (s === 0) setGuarantors([]);
+  }, [amount, availableLoan]);
+
+  // Validate guarantors
+  useEffect(() => {
+    if (shortfall === 0) {
+      setGuarantorError("");
+      return;
+    }
+    let total = 0;
+    let error = "";
+    for (const g of guarantors) {
+      if (!g.amount || isNaN(g.amount) || g.amount <= 0) {
+        error = "Each guarantee must be a positive number.";
+        break;
+      }
+      if (g.amount > g.capacity) {
+        error = `${g.name} cannot guarantee more than their available capacity.`;
+        break;
+      }
+      total += Number(g.amount);
+    }
+    if (!error && total < shortfall) {
+      error = `Total guarantees must cover the shortfall (KES ${shortfall.toLocaleString()}).`;
+    }
+    setGuarantorError(error);
+  }, [guarantors, shortfall]);
+
+  // Handle adding a new guarantor
+  const addGuarantor = async (memberId) => {
+    if (guarantors.length >= MAX_GUARANTORS) return;
+    if (guarantors.some((g) => g.id === memberId)) return;
+    const member = groupMembers.find((m) => m.id === memberId);
+    if (!member) return;
+    const name = member.profiles?.full_name || "Unknown";
+    const capacity = await getGuarantorCapacity(memberId);
+    setGuarantors((prev) => [
+      ...prev,
+      { id: memberId, name, amount: "", capacity },
+    ]);
+  };
+
+  // Handle guarantee amount change
+  const updateGuarantorAmount = (idx, value) => {
+    setGuarantors((prev) =>
+      prev.map((g, i) => (i === idx ? { ...g, amount: value } : g))
+    );
+  };
+
+  // Remove a guarantor
+  const removeGuarantor = (idx) => {
+    setGuarantors((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   const handleSubmit = async () => {
     if (!groupMemberId) {
       toast.error("Your group membership could not be verified.");
       return;
     }
-
     if (!amount || !purpose) {
       toast.error("All fields are required.");
       return;
     }
-
+    if (shortfall > 0) {
+      if (guarantors.length === 0) {
+        toast.error(
+          "You must add at least one guarantor to cover the shortfall."
+        );
+        return;
+      }
+      if (guarantorError) {
+        toast.error(guarantorError);
+        return;
+      }
+    }
     setLoading(true);
-
-    const requestedAt = new Date();
-    const dueDate = new Date(requestedAt);
-    dueDate.setDate(dueDate.getDate() + 32);
-
-    const { error } = await supabase.from("loans").insert([
-      {
-        group_member_id: groupMemberId,
-        group_id: groupId,
-        amount: parseFloat(amount),
-        purpose,
-        status: "pending",
-        requested_at: requestedAt.toISOString(),
-        due_date: dueDate.toISOString(),
-      },
-    ]);
-
-    setLoading(false);
-
-    if (error) {
-      console.error("Loan insert error:", error.message);
-      toast.error("Loan request failed.");
-    } else {
+    // Prepare payload for edge function
+    const payload = {
+      applicant_id: groupMemberId,
+      group_id: groupId,
+      amount: parseFloat(amount),
+      purpose,
+      guarantors:
+        shortfall > 0
+          ? guarantors.map((g) => ({
+              guarantor_id: g.id,
+              amount_guaranteed: Number(g.amount),
+              guarantor_name: g.name,
+            }))
+          : [],
+    };
+    try {
+      // Get the current user's access token
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) {
+        setLoading(false);
+        toast.error("You must be logged in to apply for a loan.");
+        return;
+      }
+      const res = await fetch(EDGE_FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok || data.error) {
+        toast.error(data.error || "Loan request failed.");
+        return;
+      }
       toast.success("Loan application submitted!");
       setAmount("");
       setPurpose("");
+      setGuarantors([]);
       if (onSuccess) {
         onSuccess();
       }
+    } catch (e) {
+      setLoading(false);
+      toast.error("Network or server error. Please try again.");
     }
   };
 
@@ -148,6 +274,13 @@ const LoanApplicationForm = ({ groupId, onSuccess }) => {
 
         <CardContent className="pt-2">
           <div className="space-y-3">
+            {/* Available loanable amount */}
+            {availableLoan !== null && (
+              <div className="text-xs text-emerald-700 mb-1">
+                You can borrow up to <b>KES {availableLoan.toLocaleString()}</b>{" "}
+                without guarantors.
+              </div>
+            )}
             {/* Amount Field */}
             <div className="space-y-1">
               <Label
@@ -193,9 +326,102 @@ const LoanApplicationForm = ({ groupId, onSuccess }) => {
             <Alert className="border-[#1F5A3D]/20 bg-[#1F5A3D]/5 py-1 px-2">
               <Clock className="h-3 w-3 text-[#1F5A3D]" />
               <AlertDescription className="text-xs text-[#1F5A3D]">
-                <strong>Terms:</strong> Loan due in 32 days. Interest and repayment per group policy.
+                <strong>Terms:</strong> 
+                <ul className="list-disc  ml-4 space-y-0.5">
+                  <li>
+                    You can borrow up to your available limit{" "}
+                    <b>without guarantors</b>.
+                  </li>
+                  <li>
+                    If you need more, add up to <b>3 guarantors</b> to cover the
+                    shortfall.
+                  </li>
+                  <li>
+                    <b>Repayment:</b> 3 months &mdash; <b>Month 1 & 2:</b> 10%
+                    interest only, <b>Month 3:</b> full principal + 10%
+                    interest.
+                  </li>
+                  
+                </ul>
               </AlertDescription>
             </Alert>
+
+            {/* Guarantor UI */}
+            {shortfall > 0 && (
+              <div className="mt-4 p-2 border rounded bg-orange-50">
+                <div className="font-semibold text-orange-700 mb-1 text-sm">
+                  You need guarantors to cover a shortfall of{" "}
+                  <b>KES {shortfall.toLocaleString()}</b>
+                </div>
+                <div className="mb-1 text-xs text-gray-700">
+                  Add up to {MAX_GUARANTORS} guarantors. Each must have enough
+                  available capacity.
+                </div>
+                {/* Scrollable list of selected guarantors */}
+                <div className="flex flex-col gap-1 max-h-32 overflow-y-auto pr-1">
+                  {guarantors.map((g, idx) => (
+                    <div
+                      key={`guarantor-${g.id}`}
+                      className="flex items-center gap-1 py-1 px-1 bg-white/60 rounded"
+                    >
+                      <Users className="w-3 h-3 text-emerald-700" />
+                      <span className="font-medium text-gray-800 text-xs truncate max-w-[80px]">
+                        {g.name}
+                      </span>
+                      <span className="text-[10px] text-gray-500">
+                        (Cap: KES {g.capacity.toLocaleString()})
+                      </span>
+                      <Input
+                        type="number"
+                        min="1"
+                        max={g.capacity}
+                        value={g.amount}
+                        onChange={(e) =>
+                          updateGuarantorAmount(idx, e.target.value)
+                        }
+                        className="w-16 h-7 text-xs border-gray-200 px-1"
+                        placeholder="Guarantee"
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 p-0 text-red-500 hover:bg-red-100"
+                        onClick={() => removeGuarantor(idx)}
+                        aria-label="Remove guarantor"
+                      >
+                        <span className="sr-only">Remove</span>×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                {/* Scrollable list of addable group members */}
+                {guarantors.length < MAX_GUARANTORS && (
+                  <div className="mt-1 flex gap-1 flex-wrap max-h-20 overflow-y-auto">
+                    {groupMembers
+                      .filter((m) => !guarantors.some((g) => g.id === m.id))
+                      .map((m) => (
+                        <Button
+                          key={`addable-${m.id}`}
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-1 text-[11px] border-emerald-300 text-emerald-700 min-w-[70px]"
+                          onClick={() => addGuarantor(m.id)}
+                        >
+                          <UserPlus className="w-3 h-3 mr-1" />
+                          {m.profiles?.full_name || "Unknown"}
+                        </Button>
+                      ))}
+                  </div>
+                )}
+                {guarantorError && (
+                  <div className="mt-1 text-xs text-red-600 font-medium">
+                    {guarantorError}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Status Badges */}
             <div className="flex flex-wrap gap-1">
@@ -220,7 +446,12 @@ const LoanApplicationForm = ({ groupId, onSuccess }) => {
             {/* Submit Button */}
             <Button
               onClick={handleSubmit}
-              disabled={loading || !amount || !purpose}
+              disabled={
+                loading ||
+                !amount ||
+                !purpose ||
+                (shortfall > 0 && (guarantors.length === 0 || !!guarantorError))
+              }
               className="w-full h-9 text-sm font-semibold bg-[#1F5A3D] hover:bg-[#1F5A3D]/90 text-white shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (

@@ -169,19 +169,17 @@ const MetricCard = React.memo(({ metric }) => {
 
   return (
     <Card className="transition-all duration-300 hover:shadow-xl hover:scale-[1.02] shadow-lg border border-gray-200 bg-white flex flex-col justify-between">
-      <CardContent className="p-4 min-h-[130px] flex flex-col justify-between">
-        <div className="flex items-start justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gray-50 rounded-xl">
-              <Icon className="w-6 h-6 text-[#1F5A3D]" />
-            </div>
-            <h3 className="text-sm font-medium text-gray-600 truncate max-w-[130px]">
-              {title}
-            </h3>
+      <CardContent className="p-4 min-h-[130px] flex flex-col items-center justify-center text-center">
+        <div className="flex flex-col items-center gap-2 mb-2">
+          <div className="p-3 bg-gray-50 rounded-xl mb-1">
+            <Icon className="w-6 h-6 text-[#1F5A3D]" />
           </div>
+          <h3 className="text-sm font-medium text-gray-600 truncate max-w-[130px] mb-0.5">
+            {title}
+          </h3>
           {trend && (
             <div
-              className={`flex items-center gap-1 px-2 py-1 rounded-full ${trendBg} w-fit`}
+              className={`flex items-center gap-1 px-2 py-1 rounded-full ${trendBg} w-fit mt-1`}
             >
               <TrendIcon className={`w-3 h-3 ${trendColor}`} />
               <span className={`text-xs font-semibold ${trendColor}`}>
@@ -190,12 +188,12 @@ const MetricCard = React.memo(({ metric }) => {
             </div>
           )}
         </div>
-        <div className="pl-16 mt-1">
-          <p className="text-xl font-bold text-gray-900 break-words">
+        <div className="flex flex-col items-center justify-center flex-1">
+          <p className="text-2xl font-bold text-gray-900 break-words leading-tight">
             {formatValue(value)}
           </p>
           {subtitle && (
-            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+            <p className="text-xs text-gray-500 mt-1 line-clamp-2 max-w-[140px]">
               {subtitle}
             </p>
           )}
@@ -204,7 +202,6 @@ const MetricCard = React.memo(({ metric }) => {
     </Card>
   );
 });
-
 
 const ActivityItem = ({ activity }) => {
   const getActivityIcon = (type) => {
@@ -446,8 +443,10 @@ const GroupHome = () => {
         // 5. Fetch stats
         const { data: members, error: membersError } = await supabase
           .from("group_members")
-          .select("id")
-          .eq("group_id", groupData.id);
+          .select("id, joined_at, profiles(full_name)")
+          .eq("group_id", groupData.id)
+          .eq("status", "active")
+          .order("joined_at", { ascending: true });
 
         if (membersError) throw membersError;
         const memberIds = members.map((m) => m.id);
@@ -486,7 +485,20 @@ const GroupHome = () => {
           .reduce((acc, l) => acc + l.amount, 0);
         const activeLoans = loans.filter((l) => l.status === "approved").length;
 
-        // TODO: Fetch next recipient
+        // --- Calculate next merry-go-round recipient ---
+        let nextRecipient = "N/A";
+        if (members.length > 0) {
+          // Use group creation date as the start of the schedule
+          const groupStart = new Date(groupData.created_at);
+          const now = new Date();
+          // Calculate how many months have passed since group creation
+          const monthsSinceStart =
+            (now.getFullYear() - groupStart.getFullYear()) * 12 +
+            (now.getMonth() - groupStart.getMonth());
+          // Determine recipient index
+          const recipientIndex = monthsSinceStart % members.length;
+          nextRecipient = members[recipientIndex]?.profiles?.full_name || "N/A";
+        }
 
         setStats({
           totalContributions,
@@ -494,7 +506,7 @@ const GroupHome = () => {
           pendingLoanRequests,
           outstandingLoans,
           activeLoans,
-          nextRecipient: "Mary Johnson", // Placeholder
+          nextRecipient,
         });
 
         // 6. Fetch recent activity

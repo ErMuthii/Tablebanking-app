@@ -36,6 +36,7 @@ import GroupLeaderWelfareFund from "./pages/dashboard/groupLeader/GroupLeaderWel
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
 import Groups from "./pages/dashboard/admin/groups";
+import GroupReports from "./pages/dashboard/groupLeader/GroupReports";
 
 export default function App() {
   const { session, role } = useSession();
@@ -118,16 +119,12 @@ export default function App() {
                   <Route path="loans" element={<GroupLeaderLoans />} />
                   <Route path="attendance" element={<AttendancePage />} />
                   <Route path="meetings" element={<GroupLeaderMeetings />} />
-
-                  <Route
-                    path="contributions"
-                    element={<GroupLeaderContributions />}
-                  />
+                  <Route  path="contributions"  element={<GroupLeaderContributions />} />   
                   <Route path="merrygo" element={<GroupLeaderMerryGo />} />
                   <Route path="welfare" element={<GroupLeaderWelfareFund />} />
-
-                  <Route path="contributions" element={<GroupLeaderContributions />} />
-                  <Route path="merry-go-round" element={<GroupLeaderMerryGo />} />
+                  <Route path="reports" element={<GroupReports />} />
+                  
+                  
                 </Route>
 
                 {/* Admin Dashboard Routes */}
