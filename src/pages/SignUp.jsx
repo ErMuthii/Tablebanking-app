@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { supabase } from "@/SupabaseClient"; 
 import {
   Eye, EyeOff, Mail, Lock, User, Phone, UserCheck, ArrowRight
 } from "lucide-react";
@@ -17,24 +18,44 @@ export default function SignUpForm() {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    if (!form.role) {
-      setError("Please select a role");
-      return;
-    }
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
 
-    setLoading(true);
-    setTimeout(() => {
-      alert("Account created successfully!");
-      setLoading(false);
-    }, 1500);
-  };
+  if (form.password !== form.confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
+
+  if (!form.role) {
+    setError("Please select a role");
+    return;
+  }
+
+  setLoading(true);
+
+  const { data, error } = await supabase.auth.signUp({
+    email: form.email,
+    password: form.password,
+    options: {
+      data: {
+        first_name: form.firstName,
+        last_name: form.lastName,
+        phone: form.phone,
+        role: form.role,
+      },
+    },
+  });
+
+  if (error) {
+    setError(error.message);
+    setLoading(false);
+  } else {
+    // Optional: send user to email verification page or login
+    alert("Account created successfully! Please check your email to verify.");
+    setLoading(false);
+  }
+};
 
   const handleGoogleSignUp = () => {
     console.log("Google Sign-Up initiated");

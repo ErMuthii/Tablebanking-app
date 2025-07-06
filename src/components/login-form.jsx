@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/SupabaseClient";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -13,21 +14,22 @@ export default function LoginForm() {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  e.preventDefault();
+  setLoading(true);
+  setError("");
 
-    // Simulate API call
-    setTimeout(() => {
-      if (email === "demo@chamapro.com" && password === "demo123") {
-        alert("Login successful!");
-        setLoading(false);
-      } else {
-        setError("Invalid email or password");
-        setLoading(false);
-      }
-    }, 1500);
-  };
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    setError(error.message);
+    setLoading(false);
+  } else {
+    navigate("/dashboard"); // or wherever
+  }
+};
 
   const handleGoogleLogin = async () => {
     alert("Google login would be implemented here");
