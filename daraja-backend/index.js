@@ -55,8 +55,8 @@ router.post("/stk-push", async (req, res) => {
         PartyB: DARAJA_SHORTCODE,
         PhoneNumber: phone,
         CallBackURL: CALLBACK_URL,
-        AccountReference: "TableBank",
-        TransactionDesc: "Contribution",
+        AccountReference: "ChamaPro",
+        TransactionDesc: "Transaction for ChamaPro",
       },
       {
         headers: {
