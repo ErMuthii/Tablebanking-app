@@ -25,17 +25,16 @@ import { Badge } from "@/components/ui/badge";
 import { useSession } from "@/hooks/useSession";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { 
-  PlusCircle, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  CheckCircle, 
+import {
+  PlusCircle,
+  Calendar,
+  Clock,
+  MapPin,
+  CheckCircle,
   Users,
-  Eye,
   Edit,
   Trash2,
-  CalendarDays
+  CalendarDays,
 } from "lucide-react";
 
 const GroupLeaderMeetings = () => {
@@ -49,6 +48,9 @@ const GroupLeaderMeetings = () => {
     startTime: "",
     endTime: "",
   });
+  const [editMode, setEditMode] = useState(false);
+  const [editingMeeting, setEditingMeeting] = useState(null);
+  const [deletingMeeting, setDeletingMeeting] = useState(null);
 
   const fetchMeetings = async () => {
     if (!user) return;
@@ -89,7 +91,23 @@ const GroupLeaderMeetings = () => {
     setNewMeeting((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleScheduleMeeting = async (e) => {
+  const openEditDialog = (meeting) => {
+    setEditMode(true);
+    setEditingMeeting(meeting);
+    setOpen(true);
+    setNewMeeting({
+      location: meeting.location,
+      date: meeting.starts_at ? meeting.starts_at.slice(0, 10) : "",
+      startTime: meeting.starts_at
+        ? new Date(meeting.starts_at).toISOString().slice(11, 16)
+        : "",
+      endTime: meeting.ends_at
+        ? new Date(meeting.ends_at).toISOString().slice(11, 16)
+        : "",
+    });
+  };
+
+  const handleScheduleOrEditMeeting = async (e) => {
     e.preventDefault();
     if (
       !newMeeting.location ||
@@ -100,7 +118,6 @@ const GroupLeaderMeetings = () => {
       toast.error("Please fill all fields.");
       return;
     }
-
     setLoading(true);
     try {
       const { data: groupData, error: groupError } = await supabase
@@ -108,31 +125,69 @@ const GroupLeaderMeetings = () => {
         .select("id")
         .eq("created_by", user.id)
         .single();
-
       if (groupError) throw groupError;
-
       const starts_at = new Date(
         `${newMeeting.date}T${newMeeting.startTime}`
       ).toISOString();
       const ends_at = new Date(
         `${newMeeting.date}T${newMeeting.endTime}`
       ).toISOString();
-
-      const { error } = await supabase.from("meetings").insert({
-        group_id: groupData.id,
-        location: newMeeting.location,
-        starts_at,
-        ends_at,
-        created_by: user.id,
-      });
-
-      if (error) throw error;
-      toast.success("Meeting scheduled successfully!");
+      const meeting_date = newMeeting.date;
+      if (editMode && editingMeeting) {
+        // Update
+        const { error } = await supabase
+          .from("meetings")
+          .update({
+            location: newMeeting.location,
+            starts_at,
+            ends_at,
+            meeting_date,
+          })
+          .eq("id", editingMeeting.id);
+        if (error) throw error;
+        toast.success("Meeting updated successfully!");
+      } else {
+        // Create
+        const { error } = await supabase.from("meetings").insert({
+          group_id: groupData.id,
+          location: newMeeting.location,
+          starts_at,
+          ends_at,
+          created_by: user.id,
+          meeting_date,
+        });
+        if (error) throw error;
+        toast.success("Meeting scheduled successfully!");
+      }
       setOpen(false);
-      fetchMeetings(); // Refresh list
+      setEditMode(false);
+      setEditingMeeting(null);
       setNewMeeting({ location: "", date: "", startTime: "", endTime: "" });
+      fetchMeetings();
     } catch (error) {
-      toast.error("Failed to schedule meeting.");
+      toast.error(
+        editMode ? "Failed to update meeting." : "Failed to schedule meeting."
+      );
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteMeeting = async () => {
+    if (!deletingMeeting) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("meetings")
+        .delete()
+        .eq("id", deletingMeeting.id);
+      if (error) throw error;
+      toast.success("Meeting deleted.");
+      setDeletingMeeting(null);
+      fetchMeetings();
+    } catch (error) {
+      toast.error("Failed to delete meeting.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -143,23 +198,23 @@ const GroupLeaderMeetings = () => {
     const now = new Date();
     const start = new Date(startsAt);
     const end = new Date(endsAt);
-    
-    if (now < start) return 'upcoming';
-    if (now >= start && now <= end) return 'ongoing';
-    return 'completed';
+
+    if (now < start) return "upcoming";
+    if (now >= start && now <= end) return "ongoing";
+    return "completed";
   };
 
   const getStatusBadge = (status) => {
     const variants = {
-      upcoming: 'bg-blue-100 text-blue-700 border-blue-200',
-      ongoing: 'bg-green-100 text-green-700 border-green-200',
-      completed: 'bg-gray-100 text-gray-700 border-gray-200'
+      upcoming: "bg-blue-100 text-blue-700 border-blue-200",
+      ongoing: "bg-green-100 text-green-700 border-green-200",
+      completed: "bg-gray-100 text-gray-700 border-gray-200",
     };
-    
+
     const labels = {
-      upcoming: 'Upcoming',
-      ongoing: 'Live',
-      completed: 'Completed'
+      upcoming: "Upcoming",
+      ongoing: "Live",
+      completed: "Completed",
     };
 
     return (
@@ -172,17 +227,16 @@ const GroupLeaderMeetings = () => {
   const upcomingMeetingsCount = meetings.filter(
     (m) => new Date(m.starts_at) > new Date()
   ).length;
-  
-  const ongoingMeetingsCount = meetings.filter(
-    (m) => {
-      const now = new Date();
-      const start = new Date(m.starts_at);
-      const end = new Date(m.ends_at);
-      return now >= start && now <= end;
-    }
-  ).length;
-  
-  const pastMeetingsCount = meetings.length - upcomingMeetingsCount - ongoingMeetingsCount;
+
+  const ongoingMeetingsCount = meetings.filter((m) => {
+    const now = new Date();
+    const start = new Date(m.starts_at);
+    const end = new Date(m.ends_at);
+    return now >= start && now <= end;
+  }).length;
+
+  const pastMeetingsCount =
+    meetings.length - upcomingMeetingsCount - ongoingMeetingsCount;
 
   return (
     <div className="min-h-screen rounded-lg bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 p-4 md:p-6">
@@ -205,11 +259,26 @@ const GroupLeaderMeetings = () => {
                 </div>
               </div>
             </div>
-            
-            <Dialog open={open} onOpenChange={setOpen}>
+
+            <Dialog
+              open={open}
+              onOpenChange={(v) => {
+                setOpen(v);
+                if (!v) {
+                  setEditMode(false);
+                  setEditingMeeting(null);
+                  setNewMeeting({
+                    location: "",
+                    date: "",
+                    startTime: "",
+                    endTime: "",
+                  });
+                }
+              }}
+            >
               <DialogTrigger asChild>
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="bg-gradient-to-r from-[#1F5A3D] to-[#2d7c52] hover:from-[#1F5A3D]/90 hover:to-[#2d7c52]/90 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
                 >
                   <PlusCircle className="w-5 h-5 mr-2" />
@@ -218,14 +287,25 @@ const GroupLeaderMeetings = () => {
               </DialogTrigger>
               <DialogContent className="bg-white max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-semibold text-[#1F5A3D]">Schedule New Meeting</DialogTitle>
+                  <DialogTitle className="text-xl font-semibold text-[#1F5A3D]">
+                    {editMode ? "Edit Meeting" : "Schedule New Meeting"}
+                  </DialogTitle>
                   <DialogDescription className="text-gray-600">
-                    Fill in the details to schedule a new meeting for your group.
+                    Fill in the details to {editMode ? "edit" : "schedule"} a
+                    meeting for your group.
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleScheduleMeeting} className="space-y-5">
+                <form
+                  onSubmit={handleScheduleOrEditMeeting}
+                  className="space-y-5"
+                >
                   <div className="space-y-2">
-                    <Label htmlFor="location" className="text-sm font-medium text-gray-700">Meeting Location</Label>
+                    <Label
+                      htmlFor="location"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Meeting Location
+                    </Label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -237,9 +317,14 @@ const GroupLeaderMeetings = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="date" className="text-sm font-medium text-gray-700">Meeting Date</Label>
+                    <Label
+                      htmlFor="date"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Meeting Date
+                    </Label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
@@ -251,10 +336,15 @@ const GroupLeaderMeetings = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="startTime" className="text-sm font-medium text-gray-700">Start Time</Label>
+                      <Label
+                        htmlFor="startTime"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Start Time
+                      </Label>
                       <div className="relative">
                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <Input
@@ -267,7 +357,12 @@ const GroupLeaderMeetings = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="endTime" className="text-sm font-medium text-gray-700">End Time</Label>
+                      <Label
+                        htmlFor="endTime"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        End Time
+                      </Label>
                       <div className="relative">
                         <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                         <Input
@@ -280,22 +375,32 @@ const GroupLeaderMeetings = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <DialogFooter className="gap-2">
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setOpen(false)}
+                      onClick={() => {
+                        setOpen(false);
+                        setEditMode(false);
+                        setEditingMeeting(null);
+                      }}
                       className="border-gray-200 hover:bg-gray-50"
                     >
                       Cancel
                     </Button>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={loading}
                       className="bg-[#1F5A3D] hover:bg-[#1F5A3D]/90"
                     >
-                      {loading ? "Scheduling..." : "Schedule Meeting"}
+                      {loading
+                        ? editMode
+                          ? "Updating..."
+                          : "Scheduling..."
+                        : editMode
+                        ? "Update Meeting"
+                        : "Schedule Meeting"}
                     </Button>
                   </DialogFooter>
                 </form>
@@ -310,8 +415,12 @@ const GroupLeaderMeetings = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-600">Total Meetings</p>
-                  <p className="text-3xl font-bold text-[#1F5A3D]">{loading ? "..." : meetings.length}</p>
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Meetings
+                  </p>
+                  <p className="text-3xl font-bold text-[#1F5A3D]">
+                    {loading ? "..." : meetings.length}
+                  </p>
                   <p className="text-xs text-gray-500">All time</p>
                 </div>
                 <div className="p-3 bg-gradient-to-br from-[#1F5A3D]/10 to-[#1F5A3D]/5 rounded-xl">
@@ -326,7 +435,9 @@ const GroupLeaderMeetings = () => {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-gray-600">Upcoming</p>
-                  <p className="text-3xl font-bold text-blue-600">{loading ? "..." : upcomingMeetingsCount}</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {loading ? "..." : upcomingMeetingsCount}
+                  </p>
                   <p className="text-xs text-gray-500">Scheduled</p>
                 </div>
                 <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl">
@@ -341,7 +452,9 @@ const GroupLeaderMeetings = () => {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-gray-600">Live Now</p>
-                  <p className="text-3xl font-bold text-green-600">{loading ? "..." : ongoingMeetingsCount}</p>
+                  <p className="text-3xl font-bold text-green-600">
+                    {loading ? "..." : ongoingMeetingsCount}
+                  </p>
                   <p className="text-xs text-gray-500">In progress</p>
                 </div>
                 <div className="p-3 bg-gradient-to-br from-green-100 to-green-50 rounded-xl">
@@ -356,7 +469,9 @@ const GroupLeaderMeetings = () => {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-3xl font-bold text-gray-600">{loading ? "..." : pastMeetingsCount}</p>
+                  <p className="text-3xl font-bold text-gray-600">
+                    {loading ? "..." : pastMeetingsCount}
+                  </p>
                   <p className="text-xs text-gray-500">Past events</p>
                 </div>
                 <div className="p-3 bg-gradient-to-br from-gray-100 to-gray-50 rounded-xl">
@@ -375,21 +490,33 @@ const GroupLeaderMeetings = () => {
                 <CardTitle className="text-2xl font-bold text-[#1F5A3D] mb-1">
                   Scheduled Meetings
                 </CardTitle>
-                <p className="text-gray-600">Manage and track all your group meetings</p>
+                <p className="text-gray-600">
+                  Manage and track all your group meetings
+                </p>
               </div>
             </div>
           </CardHeader>
-          
+
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-gray-100">
-                    <TableHead className="font-semibold text-gray-700 py-4">Status</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Meeting Details</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Date & Time</TableHead>
-                    <TableHead className="font-semibold text-gray-700">Organizer</TableHead>
-                    <TableHead className="font-semibold text-gray-700 text-right">Actions</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Status
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      Meeting Details
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      Date & Time
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      Organizer
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -410,12 +537,15 @@ const GroupLeaderMeetings = () => {
                             <CalendarDays className="w-8 h-8 text-[#1F5A3D]/50" />
                           </div>
                           <div className="space-y-2">
-                            <h3 className="text-lg font-semibold text-gray-800">No meetings scheduled</h3>
+                            <h3 className="text-lg font-semibold text-gray-800">
+                              No meetings scheduled
+                            </h3>
                             <p className="text-gray-600 max-w-md mx-auto">
-                              Get started by scheduling your first group meeting. Your team is waiting!
+                              Get started by scheduling your first group
+                              meeting. Your team is waiting!
                             </p>
                           </div>
-                          <Button 
+                          <Button
                             onClick={() => setOpen(true)}
                             className="bg-gradient-to-r from-[#1F5A3D] to-[#2d7c52] hover:from-[#1F5A3D]/90 hover:to-[#2d7c52]/90"
                           >
@@ -427,10 +557,13 @@ const GroupLeaderMeetings = () => {
                     </TableRow>
                   ) : (
                     meetings.map((meeting) => {
-                      const status = getMeetingStatus(meeting.starts_at, meeting.ends_at);
+                      const status = getMeetingStatus(
+                        meeting.starts_at,
+                        meeting.ends_at
+                      );
                       return (
-                        <TableRow 
-                          key={meeting.id} 
+                        <TableRow
+                          key={meeting.id}
                           className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors duration-150"
                         >
                           <TableCell className="py-4">
@@ -440,19 +573,30 @@ const GroupLeaderMeetings = () => {
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <MapPin className="w-4 h-4 text-gray-400" />
-                                <span className="font-medium text-gray-900">{meeting.location}</span>
+                                <span className="font-medium text-gray-900">
+                                  {meeting.location}
+                                </span>
                               </div>
                             </div>
                           </TableCell>
                           <TableCell className="py-4">
                             <div className="space-y-1">
                               <div className="font-medium text-gray-900">
-                                {meeting.starts_at ? format(new Date(meeting.starts_at), "PPP") : "N/A"}
+                                {meeting.starts_at
+                                  ? format(new Date(meeting.starts_at), "PPP")
+                                  : "N/A"}
                               </div>
                               <div className="text-sm text-gray-600 flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
-                                {meeting.starts_at ? format(new Date(meeting.starts_at), "p") : ""}{" "}
-                                {meeting.ends_at ? `- ${format(new Date(meeting.ends_at), "p")}` : ""}
+                                {meeting.starts_at
+                                  ? format(new Date(meeting.starts_at), "p")
+                                  : ""}{" "}
+                                {meeting.ends_at
+                                  ? `- ${format(
+                                      new Date(meeting.ends_at),
+                                      "p"
+                                    )}`
+                                  : ""}
                               </div>
                             </div>
                           </TableCell>
@@ -463,27 +607,21 @@ const GroupLeaderMeetings = () => {
                           </TableCell>
                           <TableCell className="py-4">
                             <div className="flex items-center justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="h-8 w-8 p-0 hover:bg-[#1F5A3D]/10 hover:text-[#1F5A3D]"
-                                title="View Details"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
                                 title="Edit Meeting"
+                                onClick={() => openEditDialog(meeting)}
                               >
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
                                 title="Delete Meeting"
+                                onClick={() => setDeletingMeeting(meeting)}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -498,6 +636,45 @@ const GroupLeaderMeetings = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Delete confirmation dialog */}
+        {deletingMeeting && (
+          <Dialog
+            open={true}
+            onOpenChange={(v) => {
+              if (!v) setDeletingMeeting(null);
+            }}
+          >
+            <DialogContent className="bg-white max-w-sm">
+              <DialogHeader>
+                <DialogTitle className="text-lg font-semibold text-red-600">
+                  Delete Meeting
+                </DialogTitle>
+                <DialogDescription className="text-gray-600">
+                  Are you sure you want to delete the meeting at{" "}
+                  <b>{deletingMeeting.location}</b> on{" "}
+                  {deletingMeeting.meeting_date}? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeletingMeeting(null)}
+                  className="border-gray-200"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteMeeting}
+                  className="bg-red-600 text-white"
+                  disabled={loading}
+                >
+                  {loading ? "Deleting..." : "Delete"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );

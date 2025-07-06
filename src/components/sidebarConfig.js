@@ -57,18 +57,10 @@ export const sidebarConfig = {
   ],
   group_leader: [
     { title: "Home", path: "/dashboard/leader", icon: FiHome },
-    {
-      title: "Membership",
-      path: "/dashboard/leader/membership",
-      icon: FiUsers,
-    },
+
     { title: "Meetings", path: "/dashboard/leader/meetings", icon: FiCalendar },
     { title: "Loans", path: "/dashboard/leader/loans", icon: FiDollarSign },
-    {
-      title: "Attendance",
-      path: "/dashboard/leader/attendance",
-      icon: FiCheckSquare,
-    },
+
     {
       title: "Merry-Go-Round",
       path: "/dashboard/leader/merrygo",
@@ -84,6 +76,18 @@ export const sidebarConfig = {
       path: "/dashboard/leader/welfare",
       icon: FiHeart,
     },
+    {
+      title: "Attendance",
+      path: "/dashboard/leader/attendance",
+      icon: FiCheckSquare,
+    },
+    {
+      title: "Membership",
+      path: "/dashboard/leader/membership",
+      icon: FiUsers,
+    },
+    { title: "Reports", path: "/dashboard/leader/reports", icon: FiBarChart2 },
+    
   ],
   admin: [
     { title: "Home", path: "/dashboard/admin", icon: FiHome },

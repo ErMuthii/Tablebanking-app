@@ -58,6 +58,51 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import RepaymentDialog from "@/components/ui/RepaymentDialog";
+
+async function fetchLoanPoolBreakdown(groupId) {
+  const { data: pool, error: poolError } = await supabase.rpc(
+    "get_group_loan_pool",
+    { group_id: groupId }
+  );
+  const { data: contrib, error: contribError } = await supabase
+    .from("contributions")
+    .select("amount")
+    .eq("group_id", groupId);
+  const totalContributions = (contrib || []).reduce(
+    (sum, c) => sum + Number(c.amount),
+    0
+  );
+  const { data: repayments, error: repayError } = await supabase
+    .from("loan_payments")
+    .select("amount, loan_id")
+    .in(
+      "loan_id",
+      (
+        await supabase.from("loans").select("id").eq("group_id", groupId)
+      ).data?.map((l) => l.id) || []
+    );
+  const totalRepayments = (repayments || []).reduce(
+    (sum, r) => sum + Number(r.amount),
+    0
+  );
+  const { data: loans, error: loansError } = await supabase
+    .from("loans")
+    .select("amount, status")
+    .eq("group_id", groupId)
+    .in("status", ["pending", "approved"]);
+  const outstandingPrincipal = (loans || []).reduce(
+    (sum, l) => sum + Number(l.amount),
+    0
+  );
+  return {
+    pool: pool || 0,
+    totalContributions,
+    totalRepayments,
+    outstandingPrincipal,
+  };
+}
 
 const Loans = () => {
   const { user } = useSession();
@@ -68,6 +113,35 @@ const Loans = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [updatingLoanId, setUpdatingLoanId] = useState(null);
+  const [loanPool, setLoanPool] = useState(null);
+  const [approvedSum, setApprovedSum] = useState(null);
+  const [poolLoading, setPoolLoading] = useState(false);
+  const [poolBreakdown, setPoolBreakdown] = useState({
+    pool: 0,
+    totalContributions: 0,
+    totalRepayments: 0,
+    outstandingPrincipal: 0,
+  });
+  const [repayOpen, setRepayOpen] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState(null);
+  const [balances, setBalances] = useState({});
+
+  const fetchBalances = async (loansList) => {
+    const newBalances = {};
+    for (const loan of loansList) {
+      const { data: payments } = await supabase
+        .from("loan_payments")
+        .select("amount, type")
+        .eq("loan_id", loan.id)
+        .eq("type", "principal");
+      const paid = (payments || []).reduce(
+        (sum, p) => sum + Number(p.amount),
+        0
+      );
+      newBalances[loan.id] = loan.amount - paid;
+    }
+    setBalances(newBalances);
+  };
 
   const fetchLoans = async () => {
     setLoading(true);
@@ -103,6 +177,7 @@ const Loans = () => {
         console.error("Loan fetch error:", error);
       } else {
         setLoans(data);
+        fetchBalances(data);
       }
     } catch (e) {
       toast.error("An unexpected error occurred while fetching loans.");
@@ -118,15 +193,43 @@ const Loans = () => {
     }
   }, [user]);
 
-  const updateLoanStatus = async (loanId, status, memberName) => {
-    setUpdatingLoanId(loanId);
+  useEffect(() => {
+    const fetchPoolStats = async () => {
+      if (!groupId) return;
+      setPoolLoading(true);
+      const breakdown = await fetchLoanPoolBreakdown(groupId);
+      setLoanPool(breakdown.pool);
+      setApprovedSum(null);
+      setPoolBreakdown(breakdown);
+      setPoolLoading(false);
+    };
+    fetchPoolStats();
+  }, [groupId]);
 
+  const updateLoanStatus = async (
+    loanId,
+    status,
+    memberName,
+    loanAmount,
+    loanGroupId
+  ) => {
+    setUpdatingLoanId(loanId);
     try {
+      if (status === "approved") {
+        // Enforce all-time pool cap
+        const breakdown = await fetchLoanPoolBreakdown(loanGroupId);
+        if (loanAmount > breakdown.pool) {
+          toast.error(
+            `Cannot approve this loan. Only KES ${breakdown.pool.toLocaleString()} is available in the pool.`
+          );
+          setUpdatingLoanId(null);
+          return;
+        }
+      }
       const { error } = await supabase
         .from("loans")
         .update({ status })
         .eq("id", loanId);
-
       if (error) {
         toast.error(`Failed to ${status} loan`);
       } else {
@@ -302,6 +405,95 @@ const Loans = () => {
           </div>
         </div>
 
+        {/* Loan Pool Stats Card */}
+        <div className="mb-8">
+          <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <TrendingUp className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-[#1F5A3D]">
+                      Loan Pool
+                    </h2>
+                    <div className="text-sm font-semibold text-gray-700">
+                      Available:{" "}
+                      {poolLoading
+                        ? "..."
+                        : `KES ${poolBreakdown.pool.toLocaleString()}`}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-gray-500 mb-1">
+                    Pool Utilization
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-bold text-emerald-600">
+                      {(() => {
+                        const total =
+                          poolBreakdown.totalContributions +
+                          poolBreakdown.totalRepayments;
+                        const utilization =
+                          total > 0
+                            ? Math.min(
+                                (poolBreakdown.outstandingPrincipal / total) *
+                                  100,
+                                100
+                              )
+                            : 0;
+                        return `${utilization.toFixed(1)}%`;
+                      })()}
+                    </div>
+                    <div className="bg-gray-200 h-2 w-16 rounded-full overflow-hidden">
+                      <div
+                        className="bg-emerald-500 h-full transition-all duration-500"
+                        style={{
+                          width: `${(() => {
+                            const total =
+                              poolBreakdown.totalContributions +
+                              poolBreakdown.totalRepayments;
+                            return total > 0
+                              ? Math.min(
+                                  (poolBreakdown.outstandingPrincipal / total) *
+                                    100,
+                                  100
+                                )
+                              : 0;
+                          })()}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Compact Stats Row */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="p-2 bg-gray-50 rounded">
+                  <div className="text-xs text-gray-500">Contributions</div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    KES {poolBreakdown.totalContributions.toLocaleString()}
+                  </div>
+                </div>
+                <div className="p-2 bg-gray-50 rounded">
+                  <div className="text-xs text-gray-500">Repayments</div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    KES {poolBreakdown.totalRepayments.toLocaleString()}
+                  </div>
+                </div>
+                <div className="p-2 bg-gray-50 rounded">
+                  <div className="text-xs text-gray-500">Outstanding</div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    KES {poolBreakdown.outstandingPrincipal.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <Card className="border-0 shadow-md bg-white/70 backdrop-blur-sm">
@@ -434,6 +626,9 @@ const Loans = () => {
                         Amount
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700 py-4">
+                        Balance
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700 py-4">
                         Purpose
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700 py-4">
@@ -484,6 +679,14 @@ const Loans = () => {
                         </TableCell>
 
                         <TableCell className="py-4">
+                          <span className="font-medium text-gray-800">
+                            {balances[loan.id] !== undefined
+                              ? formatCurrency(balances[loan.id])
+                              : "..."}
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="py-4">
                           <p
                             className="text-gray-700 max-w-xs truncate"
                             title={loan.purpose}
@@ -506,135 +709,68 @@ const Loans = () => {
                         </TableCell>
 
                         <TableCell className="py-4 text-right">
-                          {loan.status === "pending" ? (
-                            <div className="flex justify-end gap-2">
-                              <AlertDialog >
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    disabled={updatingLoanId === loan.id}
-                                    className="bg-green-600 hover:bg-green-700 text-white"
-                                  >
-                                    {updatingLoanId === loan.id ? (
-                                      <div className="flex items-center space-x-2">
-                                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center space-x-1">
-                                        <ThumbsUp className="w-3 h-3" />
-                                        <span>Approve</span>
-                                      </div>
-                                    )}
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent className="bg-white rounded-xl shadow-xl">
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle className=" flex items-center space-x-2 text-green-600">
-                                      <CheckCircle className="w-5 h-5" />
-                                      <span>Approve Loan</span>
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to approve the loan
-                                      application from{" "}
-                                      <span className="font-semibold">
-                                        {
-                                          loan.group_members?.profiles
-                                            ?.full_name
-                                        }
-                                      </span>{" "}
-                                      for {formatCurrency(loan.amount)}? This
-                                      action will mark the loan as approved.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() =>
-                                        updateLoanStatus(
-                                          loan.id,
-                                          "approved",
-                                          loan.group_members?.profiles
-                                            ?.full_name
-                                        )
-                                      }
-                                      className="bg-green-600 hover:bg-green-700"
-                                    >
-                                      <CheckCircle className="w-4 h-4 mr-2" />
-                                      Approve Loan
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={updatingLoanId === loan.id}
-                                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-                                  >
-                                    <div className="flex items-center space-x-1">
-                                      <ThumbsDown className="w-3 h-3" />
-                                      <span>Decline</span>
-                                    </div>
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent className="bg-white rounded-xl shadow-xl" >
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle className="flex items-center space-x-2 text-red-600">
-                                      <XCircle className="w-5 h-5" />
-                                      <span>Decline Loan</span>
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to decline the loan
-                                      application from{" "}
-                                      <span className="font-semibold">
-                                        {
-                                          loan.group_members?.profiles
-                                            ?.full_name
-                                        }
-                                      </span>{" "}
-                                      for {formatCurrency(loan.amount)}? This
-                                      action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() =>
-                                        updateLoanStatus(
-                                          loan.id,
-                                          "declined",
-                                          loan.group_members?.profiles
-                                            ?.full_name
-                                        )
-                                      }
-                                      className="bg-red-600 hover:bg-red-700"
-                                    >
-                                      <XCircle className="w-4 h-4 mr-2" />
-                                      Decline Loan
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          ) : (
-                            <div className="text-gray-400 text-sm">
-                              {loan.status === "approved"
-                                ? "Loan approved"
-                                : "Loan declined"}
-                            </div>
+                          {loan.status === "approved" && (
+                            <Button
+                              size="sm"
+                              className="bg-emerald-600 text-white mr-2"
+                              onClick={() => {
+                                setSelectedLoan(loan);
+                                setRepayOpen(true);
+                              }}
+                            >
+                              Record Repayment
+                            </Button>
+                          )}
+                          {loan.status === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                className="bg-green-600 text-white mr-2"
+                                onClick={() =>
+                                  updateLoanStatus(
+                                    loan.id,
+                                    "approved",
+                                    loan.group_members?.profiles?.full_name ||
+                                      "",
+                                    loan.amount,
+                                    loan.group_members?.group_id
+                                  )
+                                }
+                                disabled={updatingLoanId === loan.id}
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-red-600 text-white"
+                                onClick={() =>
+                                  updateLoanStatus(
+                                    loan.id,
+                                    "declined",
+                                    loan.group_members?.profiles?.full_name ||
+                                      "",
+                                    loan.amount,
+                                    loan.group_members?.group_id
+                                  )
+                                }
+                                disabled={updatingLoanId === loan.id}
+                              >
+                                Decline
+                              </Button>
+                            </>
                           )}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+                <RepaymentDialog
+                  open={repayOpen}
+                  onOpenChange={setRepayOpen}
+                  loan={selectedLoan}
+                  onSuccess={fetchLoans}
+                  userRole="leader"
+                />
               </div>
             )}
           </CardContent>

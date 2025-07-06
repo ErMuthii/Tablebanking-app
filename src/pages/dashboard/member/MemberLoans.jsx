@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/SupabaseClient";
 import { useSession } from "@/hooks/useSession";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogTrigger,
@@ -25,8 +20,16 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CreditCard, DollarSign, Plus, Calendar, CheckCircle, Clock } from "lucide-react";
+import {
+  CreditCard,
+  DollarSign,
+  Plus,
+  Calendar,
+  CheckCircle,
+  Clock,
+} from "lucide-react";
 import LoanApplicationForm from "../../LoanApplicationForm";
+import RepaymentDialog from "@/components/ui/RepaymentDialog";
 
 const MemberLoans = () => {
   const { user } = useSession();
@@ -35,6 +38,9 @@ const MemberLoans = () => {
   const [groupMemberId, setGroupMemberId] = useState(null);
   const [groupId, setGroupId] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [repayOpen, setRepayOpen] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState(null);
+  const [balances, setBalances] = useState({});
 
   useEffect(() => {
     if (user?.id) {
@@ -56,6 +62,23 @@ const MemberLoans = () => {
     }
   };
 
+  const fetchBalances = async (loansList) => {
+    const newBalances = {};
+    for (const loan of loansList) {
+      const { data: payments } = await supabase
+        .from("loan_payments")
+        .select("amount, type")
+        .eq("loan_id", loan.id)
+        .eq("type", "principal");
+      const paid = (payments || []).reduce(
+        (sum, p) => sum + Number(p.amount),
+        0
+      );
+      newBalances[loan.id] = loan.amount - paid;
+    }
+    setBalances(newBalances);
+  };
+
   const fetchLoans = async (memberId) => {
     setLoading(true);
     const { data, error } = await supabase
@@ -64,7 +87,10 @@ const MemberLoans = () => {
       .eq("group_member_id", memberId)
       .order("requested_at", { ascending: false });
 
-    if (!error && data) setLoans(data);
+    if (!error && data) {
+      setLoans(data);
+      fetchBalances(data);
+    }
     setLoading(false);
   };
 
@@ -79,9 +105,7 @@ const MemberLoans = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case "approved":
-        return (
-          <Badge className="bg-green-100 text-green-800">Approved</Badge>
-        );
+        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
       case "pending":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
       case "repaid":
@@ -100,9 +124,13 @@ const MemberLoans = () => {
               <div className="p-2 bg-[#1F5A3D] rounded-lg">
                 <CreditCard className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl font-bold text-[#1F5A3D]">My Loan Applications</h1>
+              <h1 className="text-3xl font-bold text-[#1F5A3D]">
+                My Loan Applications
+              </h1>
             </div>
-            <p className="text-gray-600">View and track your submitted loan requests</p>
+            <p className="text-gray-600">
+              View and track your submitted loan requests
+            </p>
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -129,7 +157,9 @@ const MemberLoans = () => {
 
         <Card className="border-0 shadow-xl bg-white/80">
           <CardHeader className="border-b border-gray-100 bg-white/50">
-            <CardTitle className="text-xl font-semibold text-[#1F5A3D]">My Loans</CardTitle>
+            <CardTitle className="text-xl font-semibold text-[#1F5A3D]">
+              My Loans
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
@@ -149,10 +179,12 @@ const MemberLoans = () => {
                   <TableHeader>
                     <TableRow className="bg-gray-50">
                       <TableHead>Amount</TableHead>
+                      <TableHead>Balance</TableHead>
                       <TableHead>Purpose</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Requested</TableHead>
                       <TableHead>Due Date</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -161,8 +193,17 @@ const MemberLoans = () => {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <DollarSign className="w-4 h-4 text-green-600" />
-                            <span className="font-medium text-gray-800">{formatCurrency(loan.amount)}</span>
+                            <span className="font-medium text-gray-800">
+                              {formatCurrency(loan.amount)}
+                            </span>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-gray-800">
+                            {balances[loan.id] !== undefined
+                              ? formatCurrency(balances[loan.id])
+                              : "..."}
+                          </span>
                         </TableCell>
                         <TableCell>{loan.purpose || "—"}</TableCell>
                         <TableCell>{getStatusBadge(loan.status)}</TableCell>
@@ -176,12 +217,33 @@ const MemberLoans = () => {
                             {new Date(loan.due_date).toLocaleDateString()}
                           </span>
                         </TableCell>
+                        <TableCell>
+                          {loan.status === "approved" && (
+                            <Button
+                              size="sm"
+                              className="bg-emerald-600 text-white"
+                              onClick={() => {
+                                setSelectedLoan(loan);
+                                setRepayOpen(true);
+                              }}
+                            >
+                              Repay
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
             )}
+            <RepaymentDialog
+              open={repayOpen}
+              onOpenChange={setRepayOpen}
+              loan={selectedLoan}
+              onSuccess={() => fetchLoans(groupMemberId)}
+              userRole="member"
+            />
           </CardContent>
         </Card>
       </div>
