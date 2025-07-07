@@ -24,6 +24,7 @@ import {
 } from "react-icons/fi";
 import { cn } from "@/lib/utils";
 import { CreateGroup } from "@/components/CreateGroup";
+import { JoinGroup } from "@/components/JoinGroup";
 import { useSession } from "@/hooks/useSession";
 
 const SkeletonPulse = ({ className }) => (
@@ -371,10 +372,11 @@ const AlertCard = ({ alert }) => {
   );
 };
 
-const GroupHome = () => {
+const MemberHome = () => {
   const navigate = useNavigate();
   const { user, loading: userLoading } = useSession();
-  const [group, setGroup] = useState(null);
+  const [role, setRole] = useState(null);
+  const [groupId, setGroupId] = useState(null);
   const [stats, setStats] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
   const [alerts, setAlerts] = useState([]);
@@ -383,6 +385,28 @@ const GroupHome = () => {
   const [metrics, setMetrics] = useState([]);
   const [activities, setActivities] = useState([]);
   const [fullName, setFullName] = useState("");
+  const [group, setGroup] = useState(null);
+
+  useEffect(() => {
+    const fetchProfileAndGroup = async () => {
+      if (!user?.id) return;
+      // 1. Get user role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      setRole(profile?.role || null);
+      // 2. Get group membership
+      const { data: membership } = await supabase
+        .from("group_members")
+        .select("group_id")
+        .eq("member_id", user.id)
+        .maybeSingle();
+      setGroupId(membership?.group_id || null);
+    };
+    fetchProfileAndGroup();
+  }, [user]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -410,24 +434,25 @@ const GroupHome = () => {
         } = await supabase.auth.getUser();
         if (userError || !user) throw new Error("User not authenticated.");
 
-        // Check if user has a group
-        const { data: groupData, error: groupError } = await supabase
-          .from("groups")
-          .select("*")
-          .eq("created_by", user.id)
-          .single();
-
-        if (groupError || !groupData) {
-          if (groupError && groupError.code !== "PGRST116") {
-            // PGRST116 means no rows found, which is okay for a new leader
-            throw new Error("Could not fetch group data.");
-          }
-          // No group found, so we don't set an error, just leave group as null
+        // Get user group membership
+        const { data: membership, error: membershipError } = await supabase
+          .from("group_members")
+          .select("group_id")
+          .eq("member_id", user.id)
+          .maybeSingle();
+        if (membershipError) throw membershipError;
+        if (!membership?.group_id) {
           setGroup(null);
           setLoading(false);
           return;
         }
-
+        // Fetch group details
+        const { data: groupData, error: groupError } = await supabase
+          .from("groups")
+          .select("id, name, invite_code, created_at")
+          .eq("id", membership.group_id)
+          .single();
+        if (groupError) throw groupError;
         setGroup(groupData);
 
         // --- Fetch other data only if group exists ---
@@ -643,8 +668,11 @@ const GroupHome = () => {
     );
   }
 
-  if (!group) {
+  if (role === "group_leader" && !groupId) {
     return <CreateGroup onGroupCreated={() => window.location.reload()} />;
+  }
+  if (role === "member" && !groupId) {
+    return <JoinGroup onGroupJoined={() => window.location.reload()} />;
   }
 
   const dashboardMetrics = [
@@ -656,13 +684,6 @@ const GroupHome = () => {
       subtitle: `KSh ${stats.contributionThisMonth.toLocaleString()} this month`,
       icon: FiDollarSign,
       trend: { direction: "up", value: "12" },
-    },
-    {
-      id: "pending",
-      title: "Pending Loan Requests",
-      value: stats.pendingLoanRequests,
-      subtitle: "Require your approval",
-      icon: FiClock,
     },
     {
       id: "loans",
@@ -684,6 +705,17 @@ const GroupHome = () => {
 
   const formattedDate = new Date(group.created_at).toLocaleDateString();
 
+  // Only show recent activity for the current user
+  const myRecentActivity = recentActivity.filter(
+    (activity) => activity.user === fullName
+  );
+
+  // Only show meeting-related alerts
+  const meetingAlerts = alerts.filter(
+    (alert) =>
+      alert.type === "info" && alert.title?.toLowerCase().includes("meeting")
+  );
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
       {/* Header */}
@@ -694,16 +726,13 @@ const GroupHome = () => {
               Welcome back, {fullName || "User"}!
             </h1>
             <p className="text-gray-600">
-              Managing{" "}
+              You are a member of{" "}
               <span className="text-[#1F5A3D] font-semibold">{group.name}</span>
             </p>
-            <p className="text-sm text-gray-500">{formattedDate}</p>
+            <p className="text-sm text-gray-500">Joined: {formattedDate}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium">
-            Group Leader
-          </div>
           <div className="w-10 h-10 bg-[#1F5A3D] text-white rounded-full flex items-center justify-center font-bold">
             {user.user_metadata?.full_name
               ?.split(" ")
@@ -713,33 +742,8 @@ const GroupHome = () => {
         </div>
       </div>
 
-      {/* Invite Code Card */}
-      {group.invite_code && (
-        <Card className="shadow-lg border-2 border-dashed border-emerald-300 bg-gradient-to-r from-emerald-50 to-emerald-100">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 font-medium mb-1">
-                Group Invite Code
-              </p>
-              <p className="text-2xl font-bold tracking-widest text-[#1F5A3D]">
-                {group.invite_code}
-              </p>
-            </div>
-            <Button
-              onClick={handleCopyInviteCode}
-              variant="ghost"
-              className="hover:bg-emerald-200 text-[#1F5A3D] border border-emerald-300"
-              size="sm"
-            >
-              <FiCopy className="h-4 w-4 mr-2" />
-              Copy
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {dashboardMetrics.map((metric) => (
           <MetricCard key={metric.id} metric={metric} />
         ))}
@@ -753,12 +757,13 @@ const GroupHome = () => {
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg font-semibold">
-                  Recent Activity
+                  My Recent Activity
                 </CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-[#1F5A3D] hover:bg-[#1F5A3D]/10"
+                  onClick={() => navigate("/dashboard/member/contributions")}
                 >
                   View All →
                 </Button>
@@ -766,7 +771,7 @@ const GroupHome = () => {
             </CardHeader>
             <CardContent className="p-0">
               <div className="max-h-96 overflow-y-auto">
-                {recentActivity.map((activity) => (
+                {myRecentActivity.map((activity) => (
                   <ActivityItem key={activity.id} activity={activity} />
                 ))}
               </div>
@@ -776,7 +781,7 @@ const GroupHome = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Quick Actions */}
+          {/* Member Quick Actions */}
           <Card className="shadow-lg border-0">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-semibold">
@@ -785,42 +790,43 @@ const GroupHome = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               <QuickActionButton
-                icon={FiUsers}
-                label="Manage Members"
-                variant="primary"
-                onClick={() => navigate("/dashboard/leader/membership")}
+                icon={FiDollarSign}
+                label="View My Contributions"
+                onClick={() => navigate("/dashboard/member/contributions")}
               />
               <QuickActionButton
-                icon={FiDollarSign}
-                label="Record Contribution"
-                onClick={() => {}}
+                icon={FiCreditCard}
+                label="My Loans"
+                onClick={() => navigate("/dashboard/member/loans")}
               />
               <QuickActionButton
                 icon={FiCalendar}
-                label="Schedule Meeting"
-                onClick={() => navigate("/dashboard/leader/meetings")}
+                label="Upcoming Meetings"
+                onClick={() => navigate("/dashboard/member/meetings")}
               />
             </CardContent>
           </Card>
 
-          {/* Alerts */}
-          <Card className="shadow-lg border-0">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <FiAlertTriangle className="w-5 h-5 text-yellow-600" />
-                Alerts
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {alerts.map((alert) => (
-                <AlertCard key={alert.id} alert={alert} />
-              ))}
-            </CardContent>
-          </Card>
+          {/* Alerts (member-specific) */}
+          {meetingAlerts.length > 0 && (
+            <Card className="shadow-lg border-0">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <FiAlertTriangle className="w-5 h-5 text-yellow-600" />
+                  Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {meetingAlerts.map((alert) => (
+                  <AlertCard key={alert.id} alert={alert} />
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default GroupHome;
+export default MemberHome;
