@@ -13,12 +13,12 @@ export default function LoginForm() {
 
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
   setError("");
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -26,14 +26,55 @@ export default function LoginForm() {
   if (error) {
     setError(error.message);
     setLoading(false);
-  } else {
-    navigate("/dashboard"); // or wherever
+    return;
+  }
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      setError("Could not fetch profile role.");
+      setLoading(false);
+      return;
+    }
+
+    const role = profile.role;
+
+    if (role === "group_leader") {
+      navigate("/dashboard/leader");
+    } else {
+      navigate("/dashboard/member");
+    }
+  } catch (err) {
+    setError("Unexpected error after login.");
+  } finally {
+    setLoading(false);
   }
 };
 
-  const handleGoogleLogin = async () => {
-    alert("Google login would be implemented here");
-  };
+
+const handleGoogleLogin = async () => {
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/oauth-callback`, // This will handle role-based routing
+      },
+    });
+
+    if (error) {
+      setError("Google login failed: " + error.message);
+    }
+  } catch (err) {
+    setError("Unexpected error during Google login.");
+  }
+};
+
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4">

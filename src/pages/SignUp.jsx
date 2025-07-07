@@ -57,9 +57,34 @@ export default function SignUpForm() {
   }
 };
 
-  const handleGoogleSignUp = () => {
-    console.log("Google Sign-Up initiated");
-  };
+const handleGoogleSignUp = async () => {
+  setError("");
+
+  if (!form.role) {
+    setError("Please select your role before continuing with Google Sign-Up.");
+    return;
+  }
+
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/oauth-callback`,
+        queryParams: {
+          role: form.role, // pass selected role to your redirect handler
+        },
+      },
+    });
+
+    if (error) {
+      setError("Google sign-in failed: " + error.message);
+    }
+  } catch (err) {
+    setError("Unexpected error during Google sign-in.");
+  }
+};
+
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-4">

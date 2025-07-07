@@ -60,7 +60,7 @@ export default function LandingPage() {
     <div className="flex items-center gap-2">
       <Link to="/" className="flex items-center gap-2 font-bold">
         <BanknotesIcon className="w-6 h-6" />
-        <span className="text-lg font-bold">TableBank</span>
+        <span className="text-lg font-bold">ChamaPro</span>
       </Link>
     </div>
     <nav className="hidden md:flex gap-6 text-sm">
@@ -87,50 +87,123 @@ export default function LandingPage() {
 
 
 {/* Hero Section */}
-<section className="relative bg-white text-green-800 py-28 overflow-hidden">
-  <div className="relative z-10 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-8 items-center">
+<section className="relative bg-gradient-to-br from-emerald-50 via-white to-green-50 text-green-800 py-9 overflow-hidden">
+  {/* Background decorative elements */}
+  <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-emerald-100 rounded-full opacity-30"></div>
+  </div>
+  
+  <div className="relative z-10 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
     
     {/* Left side: Text content */}
-    <div className="text-center md:text-left">
-      <h1 className="text-5xl font-extrabold leading-tight mb-4">
-        Empower Your Group<br />with Table Banking
+    <div className="text-center md:text-left space-y-6">
+      <h1 className="text-2xl md:text-6xl font-extrabold leading-tight mb-2 bg-gradient-to-r from-green-800 to-emerald-600 bg-clip-text text-transparent">
+        Empower Your Group with<br /> ChamaPro Table Banking
       </h1>
-      <p className="mt-4 text-green-700 text-lg max-w-xl">
+      <p className="text-green-700 text-xl max-w-2xl leading-relaxed mt-4 mx-auto md:mx-0">
         A smarter, transparent, and secure way to manage group savings, loans, and growth.
       </p>
-      <div className="mt-8 flex flex-wrap md:justify-start justify-center gap-4">
-        <Button
-          size="lg"
-          className="bg-green-800 text-white font-semibold hover:bg-green-700 shadow"
-          asChild
-        >
-          <Link to="/signup">
-            Get Started <ChevronRightIcon className="w-5 h-5 ml-1" />
-          </Link>
-        </Button>
-        <Button
-          variant="ghost"
-          size="lg"
-          className="text-green-800 border border-green-300 hover:bg-green-100"
-        >
-          Learn More
-        </Button>
-      </div>
+      <div className="flex flex-wrap md:justify-start justify-center gap-4 pt-4">
+  {/* Get Started */}
+  <Button
+    size="lg"
+    className="bg-green-800 text-white font-semibold hover:bg-green-700 hover:scale-105 shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform"
+    asChild
+  >
+    <Link to="/signup" className="flex items-center">
+      Get Started <ChevronRightIcon className="w-5 h-5 ml-1" />
+    </Link>
+  </Button>
+
+  {/* Learn More */}
+  <Button
+    size="lg"
+    variant="outline"
+    className="text-green-800 border-green-300 hover:border-green-400 hover:bg-green-50 hover:scale-105 transition-all duration-300 ease-in-out transform"
+    asChild
+  >
+    <a href="#learn-more">Learn More</a>
+  </Button>
+</div>
     </div>
 
     {/* Right side: Lottie animation */}
     <div className="hidden md:flex justify-center items-center">
-      <Lottie
-        animationData={animationData}
-        loop
-        autoplay
-        className="w-full h-64"
-      />
+      <div className="relative">
+        <Lottie
+          animationData={animationData}
+          loop
+          autoplay
+          className="w-full h-80 relative z-10"
+        />
+      </div>
     </div>
   </div>
 </section>
 
+{/* Transition element */}
+<div className="h-4 bg-gradient-to-b from-green-50 to-slate-50"></div>
 
+<section id="learn-more" className="bg-gradient-to-b from-slate-50 to-white py-24 px-6 md:px-16">
+  <div className="max-w-6xl mx-auto">
+    
+    {/* Section Header */}
+    <div className="text-center mb-16">
+      <div className="inline-block mb-4">
+        <span className="bg-emerald-100 text-emerald-800 px-4 py-2 rounded-full text-sm font-medium">
+          Understanding Table Banking
+        </span>
+      </div>
+      <h2 className="text-4xl md:text-5xl font-bold text-emerald-800 mb-6 leading-tight">
+        What is Table Banking?
+      </h2>
+      <div className="w-24 h-1 bg-gradient-to-r from-emerald-400 to-green-500 mx-auto mb-8"></div>
+      <p className="text-gray-700 text-xl md:text-2xl leading-relaxed max-w-4xl mx-auto">
+  Table banking is a community-based system where members come together to save money and give out loans to each other. Instead of relying on a traditional bank, everything is managed within the group, right there during meetings. It’s simple, transparent, and built on trust among members.
+</p>
+
+    </div>
+
+    {/* Feature Cards */}
+    <div className="grid md:grid-cols-3 gap-8">
+      <div className="group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100">
+        <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-emerald-800 mb-4">Community First</h3>
+        <p className="text-gray-600 text-lg leading-relaxed">
+          Members support each other through savings, loans, and joint investments all within the group.
+        </p>
+      </div>
+
+      <div className="group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100">
+        <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-emerald-800 mb-4">Accessible & Transparent</h3>
+        <p className="text-gray-600 text-lg leading-relaxed">
+          Every contribution and loan is tracked openly. There's no middleman, making it highly trustworthy and inclusive.
+        </p>
+      </div>
+
+      <div className="group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100">
+        <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-500 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-emerald-800 mb-4">Financial Growth</h3>
+        <p className="text-gray-600 text-lg leading-relaxed">
+          By pooling resources, members can access larger funds, invest in businesses, and uplift their economic status together.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
 
 
       {/* Features */}
@@ -260,7 +333,7 @@ export default function LandingPage() {
   </div>
 <div className="mt-12">
   <h3 className="text-2xl font-bold text-green-900 text-center mb-6">
-    Why TableBank Stands Out
+    Why ChamaPro Stands Out
   </h3>
   <div className="grid md:grid-cols-2 gap-8">
     <Card className="bg-white transition-all hover:shadow-lg shadow-md min-h-[260px]">
@@ -366,10 +439,10 @@ export default function LandingPage() {
                   <Avatar className="w-10 h-10 bg-green-200" />
                   <div className="text-left">
                     <p className="font-semibold">User {id}</p>
-                    <p className="text-xs text-gray-500">Group Member</p>
+                    <p className="text-xs text-gray-500">Group Leader</p>
                   </div>
                 </div>
-                <p>"TableBank made saving and borrowing simple. Our group thrives because of it!"</p>
+                <p>"ChamaPro made saving and borrowing simple. Our group thrives because of it!"</p>
               </Card>
             ))}
           </div>
@@ -413,14 +486,14 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <BanknotesIcon className="w-6 h-6" />
-            <span className="text-lg font-bold">TableBank</span>
+            <span className="text-lg font-bold">ChamaPro</span>
           </div>
           <nav className="flex flex-wrap gap-6 text-sm">
             <Link to="/login" className="hover:underline">Login</Link>
             <Link to="/signup" className="hover:underline">Register</Link>
             <a href="#features" className="hover:underline">Features</a>
           </nav>
-          <p className="text-xs">&copy; {new Date().getFullYear()} TableBank. All rights reserved.</p>
+          <p className="text-xs">&copy; {new Date().getFullYear()} ChamaPro. All rights reserved.</p>
         </div>
       </footer>
       {/* Scroll To Top Button */}
