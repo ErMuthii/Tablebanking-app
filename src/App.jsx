@@ -20,8 +20,6 @@ import MemberMerryGo from "./pages/dashboard/member/MemberMerryGo";
 import MyContributions from "./pages/dashboard/member/MemberContributions";
 import WelfareFund from "./pages/dashboard/member/MemberWelfareFund";
 import GroupInfo from "./pages/dashboard/member/GroupInfo";
-import ProfileSettings from "./pages/dashboard/member/ProfileSettings";
-import HelpSupport from "./pages/dashboard/member/HelpSupport";
 
 // Group Leader Pages
 import GroupHome from "./pages/dashboard/groupLeader/GroupHome";
@@ -32,11 +30,17 @@ import GroupLeaderContributions from "./pages/dashboard/groupLeader/GroupLeaderC
 import AttendancePage from "./pages/dashboard/groupLeader/Attendance";
 import GroupLeaderMeetings from "./pages/dashboard/groupLeader/GroupLeaderMeetings";
 import GroupLeaderWelfareFund from "./pages/dashboard/groupLeader/GroupLeaderWelfareFund";
+import GroupReports from "./pages/dashboard/groupLeader/GroupReports";
 
 // Admin Pages
 import AdminHome from "./pages/dashboard/admin/AdminHome";
 import Groups from "./pages/dashboard/admin/groups";
-import GroupReports from "./pages/dashboard/groupLeader/GroupReports";
+
+// Universal Page
+import EditProfile from "./pages/EditProfile"; 
+import HelpSupport from "./pages/HelpSupport";
+import OAuthCallback from "./pages/OAuthCallback";
+
 
 export default function App() {
   const { session, role } = useSession();
@@ -92,18 +96,15 @@ export default function App() {
                 >
                   <Route index element={<MemberHome />} />
                   <Route path="meetings" element={<Meetings />} />
-                  <Route path="loans" element={<MemberLoans />} />{" "}
-                  {/* 🔹 NEW */}
+                  <Route path="loans" element={<MemberLoans />} />
                   <Route path="merrygo" element={<MemberMerryGo />} />
                   <Route path="contributions" element={<MyContributions />} />
                   <Route path="welfare" element={<WelfareFund />} />
                   <Route path="group-info" element={<GroupInfo />} />
-                  <Route path="profile" element={<ProfileSettings />} />
                   <Route path="help" element={<HelpSupport />} />
-                  {/* Add more member subpages here */}
                 </Route>
 
-                {/* Group Leader Dashboard Routes */}
+                {/* 🔹 Group Leader Dashboard Routes */}
                 <Route
                   path="leader/*"
                   element={
@@ -119,15 +120,13 @@ export default function App() {
                   <Route path="loans" element={<GroupLeaderLoans />} />
                   <Route path="attendance" element={<AttendancePage />} />
                   <Route path="meetings" element={<GroupLeaderMeetings />} />
-                  <Route  path="contributions"  element={<GroupLeaderContributions />} />   
+                  <Route path="contributions" element={<GroupLeaderContributions />} />
                   <Route path="merrygo" element={<GroupLeaderMerryGo />} />
                   <Route path="welfare" element={<GroupLeaderWelfareFund />} />
                   <Route path="reports" element={<GroupReports />} />
-                  
-                  
                 </Route>
 
-                {/* Admin Dashboard Routes */}
+                {/* 🔹 Admin Dashboard Routes */}
                 {role === "admin" && (
                   <Route path="admin/*" element={<AdminDashboard />}>
                     <Route index element={<AdminHome />} />
@@ -135,6 +134,18 @@ export default function App() {
                   </Route>
                 )}
               </Route>
+
+              {/* ✅ Universal Profile Route */}
+              <Route path="/Edit" element={<EditProfile />} />
+              <Route path="/help" element={<HelpSupport />} />
+              
+
+              <Route path="/oauth-callback" element={<OAuthCallback />} />
+              
+
+
+
+              {/* Redirect any unmatched routes to the dashboard */}
 
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </>

@@ -13,28 +13,27 @@ const {
   SUPABASE_SERVICE_ROLE_KEY,
 } = process.env;
 
-// Supabase client (server-side)
 const { createClient } = require("@supabase/supabase-js");
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Get OAuth Token
+// OAuth token
 const getToken = async () => {
   const auth = Buffer.from(`${DARAJA_CONSUMER_KEY}:${DARAJA_CONSUMER_SECRET}`).toString("base64");
-  const response = await axios.get(
+  const { data } = await axios.get(
     "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-    {
-      headers: { Authorization: `Basic ${auth}` },
-    }
+    { headers: { Authorization: `Basic ${auth}` } }
   );
-  return response.data.access_token;
+  return data.access_token;
 };
 
-// STK Push
+// STK Push endpoint
 router.post("/stk-push", async (req, res) => {
-  const { phone, amount } = req.body;
+  const { phone, amount, accountReference, transactionDesc, type, group_member_id } = req.body;
 
-  if (!phone || !amount) {
-    return res.status(400).json({ error: "Phone and amount are required" });
+  console.log("📨 Incoming STK Request:", req.body);
+
+  if (!phone || !amount || !type || !group_member_id) {
+    return res.status(400).json({ error: "Missing required fields" });
   }
 
   const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, -3);
@@ -55,83 +54,56 @@ router.post("/stk-push", async (req, res) => {
         PartyB: DARAJA_SHORTCODE,
         PhoneNumber: phone,
         CallBackURL: CALLBACK_URL,
-        AccountReference: "ChamaPro",
-        TransactionDesc: "Transaction for ChamaPro",
+        AccountReference: accountReference || `${type}-${group_member_id}`,
+        TransactionDesc: transactionDesc || "Member contribution",
       },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     res.json(response.data);
   } catch (error) {
-    console.error("STK Push Error:", error.response?.data || error.message);
-    res.status(500).json({ error: error.response?.data || "Internal server error" });
+    console.error("❌ STK Push Error:", error.response?.data || error.message);
+    res.status(500).json({ error: "STK Push failed", details: error.response?.data });
   }
 });
 
-// Callback Route
+// Callback handler
 router.post("/callback", async (req, res) => {
-  console.log("📩 Received M-Pesa Callback:", JSON.stringify(req.body, null, 2));
-
   const callback = req.body.Body?.stkCallback;
+
   if (!callback || callback.ResultCode !== 0) {
-    console.log("❌ Payment failed or cancelled.");
-    return res.status(200).send("Ignored");
+    return res.status(200).send("No successful payment.");
   }
 
-  const metadata = callback.CallbackMetadata?.Item;
-  const phone = metadata?.find((i) => i.Name === "PhoneNumber")?.Value;
-  const amount = metadata?.find((i) => i.Name === "Amount")?.Value;
+  const metadata = callback.CallbackMetadata?.Item || [];
+  const phone = metadata.find((i) => i.Name === "PhoneNumber")?.Value;
+  const amount = metadata.find((i) => i.Name === "Amount")?.Value;
+  const accountReference = callback?.AccountReference || "";
 
-  if (!phone || !amount) {
-    console.log("⚠️ Missing phone or amount in callback.");
-    return res.status(400).send("Missing data");
+  console.log("✅ Callback Data:", { phone, amount, accountReference });
+
+  const [type, group_member_id] = accountReference.split("-");
+
+  if (!group_member_id || !amount) {
+    console.error("❌ Missing group_member_id or amount in callback");
+    return res.status(400).send("Missing required values");
   }
 
-  // Step 1: Find user profile by phone number
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("phone_number", phone.toString())
-    .maybeSingle();
-
-  if (!profile) {
-    console.log("❌ No profile found for phone:", phone);
-    return res.status(404).send("Profile not found");
-  }
-
-  // Step 2: Find group_member_id
-  const { data: groupMember } = await supabase
-    .from("group_members")
-    .select("id")
-    .eq("member_id", profile.id)
-    .maybeSingle();
-
-  if (!groupMember) {
-    console.log("❌ No group member found for profile ID:", profile.id);
-    return res.status(404).send("Group member not found");
-  }
-
-  // Step 3: Insert contribution
   const { error } = await supabase.from("contributions").insert([
     {
-      group_member_id: groupMember.id,
+      group_member_id,
       amount,
-      type: "monthly",
-      date_contributed: new Date().toISOString().split("T")[0],
+      type: type || "monthly",
+      date_contributed: new Date().toISOString(),
     },
   ]);
 
   if (error) {
     console.error("❌ Failed to insert contribution:", error.message);
-    return res.status(500).send("Insert failed");
+    return res.status(500).send("Contribution record failed");
   }
 
-  console.log("✅ Contribution inserted successfully for phone:", phone);
-  res.status(200).send("OK");
+  return res.status(200).send("Contribution recorded");
 });
 
 module.exports = router;

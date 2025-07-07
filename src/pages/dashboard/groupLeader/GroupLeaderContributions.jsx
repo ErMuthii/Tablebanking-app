@@ -33,6 +33,7 @@ const GroupLeaderContributions = () => {
   const [showAll, setShowAll] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ phone: "", amount: "" });
+  const [loadingPayment, setLoadingPayment] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -42,8 +43,7 @@ const GroupLeaderContributions = () => {
 
   useEffect(() => {
     if (groupId) {
-      fetchGroupContributions();
-      fetchMyContributions();
+      fetchAllData();
     }
   }, [groupId]);
 
@@ -62,18 +62,18 @@ const GroupLeaderContributions = () => {
     }
   };
 
-  const getMyGroupMemberIds = async () => {
-    const { data } = await supabase
+  const fetchAllData = async () => {
+    await Promise.all([fetchMyContributions(), fetchGroupContributions()]);
+  };
+
+  const fetchMyContributions = async () => {
+    const { data: members } = await supabase
       .from("group_members")
       .select("id")
       .eq("group_id", groupId)
       .eq("member_id", user.id);
 
-    return data?.map((d) => d.id) || [];
-  };
-
-  const fetchMyContributions = async () => {
-    const memberIds = await getMyGroupMemberIds();
+    const memberIds = members?.map((m) => m.id) || [];
 
     const { data } = await supabase
       .from("contributions")
@@ -86,7 +86,7 @@ const GroupLeaderContributions = () => {
         id: i + 1,
         amount: c.amount,
         type: c.type,
-        date: c.date_contributed,
+        date: new Date(c.date_contributed).toLocaleDateString(),
       }));
       setMyContributions(formatted);
     }
@@ -98,21 +98,15 @@ const GroupLeaderContributions = () => {
     const { data, error } = await supabase
       .from("contributions")
       .select(
-        `
-        id,
-        amount,
-        type,
-        date_contributed,
-        group_member_id,
-        group_id,
-        group_members (
-          profiles (
-            full_name
-          )
-        )
-      `
+        `id, amount, type, date_contributed, group_member_id, group_members ( profiles ( full_name ))`
       )
-      .eq("group_id", groupId)
+      .in(
+        "group_member_id",
+        (await supabase
+          .from("group_members")
+          .select("id")
+          .eq("group_id", groupId)).data.map((g) => g.id)
+      )
       .order("date_contributed", { ascending: false });
 
     if (!error && data) {
@@ -121,7 +115,7 @@ const GroupLeaderContributions = () => {
         contributor: entry.group_members?.profiles?.full_name || "Unknown",
         amount: entry.amount,
         type: entry.type,
-        date: entry.date_contributed,
+        date: new Date(entry.date_contributed).toLocaleDateString(),
       }));
       setGroupContributions(formatted);
     }
@@ -136,32 +130,61 @@ const GroupLeaderContributions = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoadingPayment(true);
 
     try {
+      const phone = formData.phone.replace(/[^0-9]/g, "").replace(/^0/, "254");
+
       const res = await fetch("http://localhost:4000/stk-push", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: formData.phone.replace(/[^0-9]/g, "").replace(/^0/, "254"),
-          amount: formData.amount,
-        }),
+        body: JSON.stringify({ phone, amount: formData.amount }),
       });
 
       const data = await res.json();
 
       if (data.ResponseCode === "0") {
-        alert("STK Push sent. Enter your M-Pesa PIN to complete the payment.");
-        setDialogOpen(false);
-        setFormData({ phone: "", amount: "" });
+        const { data: gmData, error: gmError } = await supabase
+          .from("group_members")
+          .select("id")
+          .eq("group_id", groupId)
+          .eq("member_id", user.id)
+          .single();
+
+        if (gmError || !gmData) {
+          alert("⚠️ Failed to fetch your group member ID.");
+          return;
+        }
+
+        const { error: insertError } = await supabase.from("contributions").insert({
+          group_member_id: gmData.id,
+          amount: parseFloat(formData.amount),
+          type: "monthly",
+          date_contributed: new Date().toISOString().split("T")[0],
+        });
+
+        if (insertError) {
+          console.error("Insert error:", insertError);
+          alert("❌ Payment went through but failed to save record.");
+        } else {
+          alert("🎉 Contribution recorded successfully!");
+          setDialogOpen(false);
+          setFormData({ phone: "", amount: "" });
+          fetchAllData();
+        }
       } else {
-        console.error("STK Push failed", data);
-        alert("STK Push failed. Please check the number and try again.");
+        alert("❌ STK Push failed. Check number and try again.");
       }
     } catch (err) {
       console.error("STK request error:", err);
-      alert("Something went wrong while sending the STK Push.");
+      alert("❌ Error sending STK Push.");
+    } finally {
+      setLoadingPayment(false);
     }
   };
+
+
+
 
   const groupColumns = [
     {
@@ -567,23 +590,34 @@ const GroupLeaderContributions = () => {
               </div>
 
               <DialogFooter>
-                <div className="flex flex-col gap-3 w-full">
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 py-3 text-base font-semibold"
-                  >
-                    Process Payment
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setDialogOpen(false)}
-                    className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </DialogFooter>
+  <div className="flex flex-col gap-3 w-full">
+    <Button
+      type="submit"
+      disabled={loadingPayment}
+      className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 py-3 text-base font-semibold"
+    >
+      {loadingPayment ? (
+        <div className="flex items-center justify-center gap-2">
+          <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+          Processing...
+        </div>
+      ) : (
+        "Process Payment"
+      )}
+    </Button>
+
+    <Button
+      type="button"
+      variant="outline"
+      disabled={loadingPayment}
+      onClick={() => setDialogOpen(false)}
+      className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
+    >
+      Cancel
+    </Button>
+  </div>
+</DialogFooter>
+
             </form>
           </DialogContent>
         </Dialog>

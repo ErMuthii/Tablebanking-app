@@ -1,5 +1,6 @@
 import React from "react";
-import { LoginForm } from "@/components/login-form";
+import LoginForm from "@/components/login-form"; // ✅ default import
+
 
 const Login = () => {
   return (

@@ -71,14 +71,15 @@ function AccountToggle({ user }) {
       {isExpanded && (
         <div className="mt-3 pl-3 space-y-1 animate-in slide-in-from-top-2 duration-200 fade-in-50">
           <DropdownOption
-            icon={FiUser}
-            label="Profile Settings"
-            to="/dashboard/member/profile"
-          />
+  icon={FiUser}
+  label="Edit Profile"
+  to="/edit"
+/>
+
           <DropdownOption
             icon={FiHelpCircle}
             label="Help & Support"
-            to="/dashboard/member/help"
+            to="/help"
           />
         </div>
       )}
@@ -179,7 +180,7 @@ export function Sidebar() {
           </div>
           <div className="flex-1">
             <h1 className="font-bold text-xl text-gray-900 tracking-tight">
-              TableBank
+              ChamaPro
             </h1>
             <p className="text-sm text-gray-500 capitalize font-medium">
               {role || "Member"} Dashboard

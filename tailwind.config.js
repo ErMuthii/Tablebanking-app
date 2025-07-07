@@ -49,11 +49,12 @@ module.exports = {
         montserrat: ["Montserrat", "sans-serif"],
         sans: ["Open Sans", "sans-serif"],
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
+borderRadius: {
+  lg: "var(--radius)",
+  md: "calc(var(--radius) - 2px)",
+  sm: "calc(var(--radius) - 4px)",
+},
+
       keyframes: {
         "accordion-down": {
           from: { height: 0 },
@@ -73,3 +74,4 @@ module.exports = {
   plugins: [require("tailwindcss-animate")],
   color: { oklch: false },
 };
+
