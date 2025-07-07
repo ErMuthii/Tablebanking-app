@@ -71,4 +71,5 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
+  color: { oklch: false },
 };
