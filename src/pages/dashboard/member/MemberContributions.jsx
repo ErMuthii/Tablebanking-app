@@ -21,6 +21,7 @@ const MemberContributions = () => {
   const [myContributions, setMyContributions] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState({ phone: "", amount: "" });
+  const [loadingPayment, setLoadingPayment] = useState(false);
 
   useEffect(() => {
     if (user?.id) fetchGroupId();
@@ -63,7 +64,7 @@ const MemberContributions = () => {
         id: i + 1,
         amount: c.amount,
         type: c.type,
-        date: c.date_contributed,
+        date: new Date(c.date_contributed).toLocaleDateString(),
       }));
       setMyContributions(formatted);
     }
@@ -74,43 +75,95 @@ const MemberContributions = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const groupMemberId = await getMyGroupMemberId();
-    if (!groupMemberId) return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoadingPayment(true);
 
+  try {
+    const groupMemberId = await getMyGroupMemberId();
+    if (!groupMemberId) {
+      alert("⚠️ Failed to fetch your group member ID.");
+      setLoadingPayment(false);
+      return;
+    }
+
+    // Ensure phone number is in the format 2547XXXXXXXX (no +, no spaces)
+    let phone = formData.phone.replace(/[^0-9]/g, "");
+    if (phone.startsWith("0")) {
+      phone = "254" + phone.slice(1);
+    } else if (phone.startsWith("254")) {
+      // already correct
+    } else if (phone.startsWith("7")) {
+      phone = "254" + phone;
+    } else if (phone.startsWith("+254")) {
+      phone = phone.slice(1);
+    } else {
+      alert("❌ Invalid phone number format. Please use 07XXXXXXXX or 2547XXXXXXXX.");
+      setLoadingPayment(false);
+      return;
+    }
+
+    const payload = {
+      phone,
+      amount: parseFloat(formData.amount),
+      type: "contribution",
+      group_member_id: groupMemberId,
+      accountReference: `Contribution-${groupMemberId}`,
+      transactionDesc: "Monthly group contribution",
+    };
+
+    let res;
     try {
-      const res = await fetch("http://localhost:4000/stk-push", {
+      res = await fetch("http://localhost:4000/stk-push", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: formData.phone,
-          amount: formData.amount,
-        }),
+        body: JSON.stringify(payload),
+      });
+    } catch (networkErr) {
+      alert("❌ Could not reach payment server. Please check your connection or try again later.");
+      setLoadingPayment(false);
+      return;
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (jsonErr) {
+      alert("❌ Invalid response from payment server.");
+      setLoadingPayment(false);
+      return;
+    }
+
+    if (data.ResponseCode === "0") {
+      const { error: insertError } = await supabase.from("contributions").insert({
+        group_member_id: groupMemberId,
+        amount: payload.amount,
+        type: "monthly",
+        date_contributed: new Date().toISOString().split("T")[0],
       });
 
-      const data = await res.json();
-
-      if (data.ResponseCode === "0") {
-        await supabase.from("contributions").insert([
-          {
-            group_member_id: groupMemberId,
-            amount: Number(formData.amount),
-            type: "monthly",
-            date_contributed: new Date().toISOString().split("T")[0],
-          },
-        ]);
-
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        alert("❌ Payment went through but failed to save record.");
+      } else {
+        alert("🎉 Contribution recorded successfully!");
         setDialogOpen(false);
         setFormData({ phone: "", amount: "" });
         fetchMyContributions();
-      } else {
-        alert("STK Push failed: Please try again.");
       }
-    } catch (err) {
-      console.error("STK Push error:", err.message);
+    } else {
+      console.error("STK Push backend error:", data);
+      alert("❌ STK Push failed. Check your phone number and try again.");
     }
-  };
+  } catch (err) {
+    console.error("STK Push error:", err.message);
+    alert("❌ Error sending STK Push. Please try again.");
+  } finally {
+    setLoadingPayment(false);
+  }
+};
+
+
 
   const myColumns = [
     {
@@ -233,6 +286,41 @@ const MemberContributions = () => {
                 responsive
                 pagination={contributionCount > 10}
                 paginationPerPage={10}
+                noDataComponent={
+                  <div className="py-12 text-center">
+                    <CreditCard className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-slate-600 text-lg">No contributions yet</p>
+                    <p className="text-slate-500 text-sm">
+                      Start by making your first contribution
+                    </p>
+                  </div>
+                }
+                customStyles={{
+                  headCells: {
+                    style: {
+                      backgroundColor: "#f8fafc",
+                      fontWeight: 600,
+                      fontSize: "14px",
+                      color: "#334155",
+                      borderBottom: "2px solid #e2e8f0",
+                      minHeight: "48px",
+                    },
+                  },
+                  rows: {
+                    style: {
+                      minHeight: "56px",
+                      "&:hover": {
+                        backgroundColor: "#f1f5f9",
+                      },
+                    },
+                  },
+                  pagination: {
+                    style: {
+                      backgroundColor: "#f8fafc",
+                      borderTop: "1px solid #e2e8f0",
+                    },
+                  },
+                }}
               />
             </div>
           </CardContent>
@@ -265,6 +353,7 @@ const MemberContributions = () => {
                     value={formData.phone}
                     onChange={handleFormChange}
                     required
+                    className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
                   />
                 </div>
                 <div>
@@ -280,6 +369,7 @@ const MemberContributions = () => {
                     required
                     inputMode="numeric"
                     pattern="[0-9]*"
+                    className="border-slate-300 focus:border-emerald-500 focus:ring-emerald-500"
                   />
                 </div>
               </div>
@@ -287,13 +377,22 @@ const MemberContributions = () => {
                 <div className="flex flex-col gap-3 w-full">
                   <Button
                     type="submit"
+                    disabled={loadingPayment}
                     className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 py-3 text-base font-semibold"
                   >
-                    Process Payment
+                    {loadingPayment ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        Processing...
+                      </div>
+                    ) : (
+                      "Process Payment"
+                    )}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
+                    disabled={loadingPayment}
                     onClick={() => setDialogOpen(false)}
                     className="w-full border-slate-300 text-slate-700 hover:bg-slate-50"
                   >
@@ -301,8 +400,6 @@ const MemberContributions = () => {
                   </Button>
                 </div>
               </DialogFooter>
-
-
             </form>
           </DialogContent>
         </Dialog>

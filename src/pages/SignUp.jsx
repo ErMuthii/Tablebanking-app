@@ -52,8 +52,26 @@ export default function SignUpForm() {
     setLoading(false);
   } else {
     // Optional: send user to email verification page or login
+    const user = data.user;
+
+if (user) {
+  const { error: profileError } = await supabase.from("profiles").insert({
+    id: user.id,
+    email: form.email,
+    full_name: fullName,
+    phone_number: form.phone,
+    role: form.role,
+  });
+
+  if (profileError) {
+    setError("Account created, but failed to save profile.");
+    console.error("Profile insert error:", profileError.message);
+  } else {
     alert("Account created successfully! Please check your email to verify.");
-    setLoading(false);
+  }
+}
+setLoading(false);
+
   }
 };
 
