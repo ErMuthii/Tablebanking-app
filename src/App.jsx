@@ -37,8 +37,10 @@ import AdminHome from "./pages/dashboard/admin/AdminHome";
 import Groups from "./pages/dashboard/admin/groups";
 
 // Universal Page
-import EditProfile from "./pages/EditProfile"; // ✅ NEW
-import HelpSupport from "./pages/HelpSupport"; // ✅ NEW
+import EditProfile from "./pages/EditProfile"; 
+import HelpSupport from "./pages/HelpSupport";
+import OAuthCallback from "./pages/OAuthCallback";
+
 
 export default function App() {
   const { session, role } = useSession();
@@ -139,7 +141,7 @@ export default function App() {
               
 
               <Route path="/oauth-callback" element={<OAuthCallback />} />
-              <Route path="/oauth-callback" element={<OAuthCallback />} />
+              
 
 
 

@@ -13,28 +13,28 @@ const {
   SUPABASE_SERVICE_ROLE_KEY,
 } = process.env;
 
-// Supabase client (server-side)
+// Supabase client
 const { createClient } = require("@supabase/supabase-js");
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Get OAuth Token
+// Generate OAuth token
 const getToken = async () => {
   const auth = Buffer.from(`${DARAJA_CONSUMER_KEY}:${DARAJA_CONSUMER_SECRET}`).toString("base64");
-  const response = await axios.get(
+  const { data } = await axios.get(
     "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
     {
       headers: { Authorization: `Basic ${auth}` },
     }
   );
-  return response.data.access_token;
+  return data.access_token;
 };
 
-// STK Push
+// Initiate STK Push
 router.post("/stk-push", async (req, res) => {
-  const { phone, amount } = req.body;
+  const { phone, amount, accountReference, transactionDesc } = req.body;
 
-  if (!phone || !amount) {
-    return res.status(400).json({ error: "Phone and amount are required" });
+  if (!phone || !amount || !accountReference) {
+    return res.status(400).json({ error: "Missing phone, amount, or reference." });
   }
 
   const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, -3);
@@ -55,8 +55,8 @@ router.post("/stk-push", async (req, res) => {
         PartyB: DARAJA_SHORTCODE,
         PhoneNumber: phone,
         CallBackURL: CALLBACK_URL,
-        AccountReference: "ChamaPro",
-        TransactionDesc: "Transaction for ChamaPro",
+        AccountReference: accountReference,
+        TransactionDesc: transactionDesc || "Loan repayment via ChamaPro",
       },
       {
         headers: {
@@ -68,69 +68,65 @@ router.post("/stk-push", async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error("STK Push Error:", error.response?.data || error.message);
-    res.status(500).json({ error: error.response?.data || "Internal server error" });
+    res.status(500).json({ error: "STK push failed" });
   }
 });
 
-// Callback Route
+// Handle Safaricom STK Callback
 router.post("/callback", async (req, res) => {
-  console.log("📩 Received M-Pesa Callback:", JSON.stringify(req.body, null, 2));
+  const callback = req.body?.Body?.stkCallback;
 
-  const callback = req.body.Body?.stkCallback;
   if (!callback || callback.ResultCode !== 0) {
-    console.log("❌ Payment failed or cancelled.");
-    return res.status(200).send("Ignored");
+    console.log("❌ Payment was not successful or cancelled.");
+    return res.status(200).send("Payment not completed");
   }
 
-  const metadata = callback.CallbackMetadata?.Item;
-  const phone = metadata?.find((i) => i.Name === "PhoneNumber")?.Value;
-  const amount = metadata?.find((i) => i.Name === "Amount")?.Value;
+  const metadata = callback.CallbackMetadata?.Item || [];
+  const phone = metadata.find((i) => i.Name === "PhoneNumber")?.Value;
+  const amount = metadata.find((i) => i.Name === "Amount")?.Value;
+  const accountReference = callback?.MerchantRequestID || ""; // fallback to identify loan
 
-  if (!phone || !amount) {
-    console.log("⚠️ Missing phone or amount in callback.");
-    return res.status(400).send("Missing data");
+  // Example: LoanRepayment-12345
+  const refText = metadata.find((i) => i.Name === "AccountReference")?.Value || "";
+  const loanId = refText?.startsWith("LoanRepayment-")
+    ? refText.split("LoanRepayment-")[1]
+    : null;
+
+  if (!phone || !amount || !loanId) {
+    console.error("⚠️ Missing phone, amount or loan ID");
+    return res.status(400).send("Missing transaction data");
   }
 
-  // Step 1: Find user profile by phone number
-  const { data: profile } = await supabase
-    .from("profiles")
+  // Prevent duplicate entry (optional)
+  const { data: existing } = await supabase
+    .from("loan_payments")
     .select("id")
-    .eq("phone_number", phone.toString())
+    .eq("loan_id", loanId)
+    .eq("amount", amount)
+    .gte("paid_at", new Date(Date.now() - 5 * 60 * 1000).toISOString()) // within 5 minutes
+    .limit(1)
     .maybeSingle();
 
-  if (!profile) {
-    console.log("❌ No profile found for phone:", phone);
-    return res.status(404).send("Profile not found");
+  if (existing) {
+    console.log("⚠️ Duplicate payment attempt blocked.");
+    return res.status(200).send("Already recorded.");
   }
 
-  // Step 2: Find group_member_id
-  const { data: groupMember } = await supabase
-    .from("group_members")
-    .select("id")
-    .eq("member_id", profile.id)
-    .maybeSingle();
-
-  if (!groupMember) {
-    console.log("❌ No group member found for profile ID:", profile.id);
-    return res.status(404).send("Group member not found");
-  }
-
-  // Step 3: Insert contribution
-  const { error } = await supabase.from("contributions").insert([
+  const { error } = await supabase.from("loan_payments").insert([
     {
-      group_member_id: groupMember.id,
-      amount,
-      type: "monthly",
-      date_contributed: new Date().toISOString().split("T")[0],
+      loan_id: loanId,
+      amount: amount,
+      type: "principal",
+      paid_at: new Date().toISOString(),
     },
   ]);
 
   if (error) {
-    console.error("❌ Failed to insert contribution:", error.message);
-    return res.status(500).send("Insert failed");
+    console.error("❌ Failed to insert loan repayment:", error.message);
+    return res.status(500).send("Failed to record");
   }
 
-  console.log("✅ Contribution inserted successfully for phone:", phone);
+  console.log(`✅ Loan repayment of ${amount} recorded for Loan ID: ${loanId}`);
   res.status(200).send("OK");
 });
 

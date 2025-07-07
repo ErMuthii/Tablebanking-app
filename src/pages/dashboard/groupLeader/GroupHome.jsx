@@ -655,7 +655,6 @@ const GroupHome = () => {
       currency: "KSh",
       subtitle: `KSh ${stats.contributionThisMonth.toLocaleString()} this month`,
       icon: FiDollarSign,
-      trend: { direction: "up", value: "12" },
     },
     {
       id: "pending",
@@ -671,7 +670,6 @@ const GroupHome = () => {
       currency: "KSh",
       subtitle: `${stats.activeLoans} active loans`,
       icon: FiCreditCard,
-      trend: { direction: "down", value: "5" },
     },
     {
       id: "merry-go-round",
