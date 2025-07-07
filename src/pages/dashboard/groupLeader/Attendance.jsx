@@ -60,8 +60,8 @@ const AttendancePage = () => {
   const { user } = useSession();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [meetings, setMeetings] = useState([]);
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [attendance, setAttendance] = useState({});
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("manual");
@@ -90,10 +90,45 @@ const AttendancePage = () => {
       } else {
         setMembers(memberData);
       }
+      // Fetch meetings for this group
+      const { data: meetingsData, error: meetingsError } = await supabase
+        .from("meetings")
+        .select("id, location, starts_at, ends_at")
+        .eq("group_id", groupData.id)
+        .order("starts_at", { ascending: false });
+      if (meetingsError) {
+        toast.error("Failed to load meetings.");
+      } else {
+        setMeetings(meetingsData);
+      }
       setLoading(false);
     };
     fetchMembers();
   }, [user]);
+
+  // When a meeting is selected, fetch attendance for that meeting
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      if (!selectedMeeting) return;
+      setLoading(true);
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from("attendance")
+        .select("member_id, status")
+        .eq("meeting_id", selectedMeeting.id);
+      if (attendanceError) {
+        toast.error("Failed to load attendance for meeting.");
+        setAttendance({});
+      } else {
+        const att = {};
+        (attendanceData || []).forEach((a) => {
+          att[a.member_id] = a.status;
+        });
+        setAttendance(att);
+      }
+      setLoading(false);
+    };
+    fetchAttendance();
+  }, [selectedMeeting]);
 
   // Stats calculation (mocked for now)
   const totalMembers = members.length;
@@ -118,8 +153,8 @@ const AttendancePage = () => {
 
   // Save attendance to Supabase
   const handleSaveAttendance = async () => {
-    if (!selectedDate) {
-      toast.error("Please select a date.");
+    if (!selectedMeeting) {
+      toast.error("Please select a meeting.");
       return;
     }
     if (Object.keys(attendance).length === 0) {
@@ -128,55 +163,11 @@ const AttendancePage = () => {
     }
     setLoading(true);
     try {
-      // 1. Get group id
-      const { data: groupData, error: groupError } = await supabase
-        .from("groups")
-        .select("id")
-        .eq("created_by", user.id)
-        .single();
-      if (groupError || !groupData) {
-        toast.error("Could not find your group.");
-        setLoading(false);
-        return;
-      }
-      // 2. Check if meeting exists for this date
-      const date = format(selectedDate, "yyyy-MM-dd");
-      const { data: meeting, error: meetingError } = await supabase
-        .from("meetings")
-        .select("id")
-        .eq("group_id", groupData.id)
-        .gte("starts_at", `${date}T00:00:00.000Z`)
-        .lte("starts_at", `${date}T23:59:59.999Z`)
-        .maybeSingle();
-
-      let meetingId = meeting?.id;
-      if (!meetingId) {
-        // Create meeting if none is scheduled - useful for ad-hoc meetings
-        toast.info(
-          "No meeting was scheduled for this date. Creating an ad-hoc meeting record."
-        );
-        const { data: newMeeting, error: createMeetingError } = await supabase
-          .from("meetings")
-          .insert({
-            group_id: groupData.id,
-            starts_at: selectedDate.toISOString(),
-            location: "Ad-hoc Meeting", // Default location
-            created_by: user.id,
-          })
-          .select()
-          .single();
-        if (createMeetingError || !newMeeting) {
-          toast.error("Failed to create meeting record.");
-          setLoading(false);
-          return;
-        }
-        meetingId = newMeeting.id;
-      }
-      // 3. Upsert attendance records
+      // Upsert attendance records for the selected meeting
       const attendanceRows = Object.entries(attendance)
         .filter(([_, status]) => status !== "pending")
         .map(([memberId, status]) => ({
-          meeting_id: meetingId,
+          meeting_id: selectedMeeting.id,
           member_id: memberId,
           status,
           marked_by: user.id,
@@ -215,36 +206,28 @@ const AttendancePage = () => {
             </p>
           </div>
 
-          {/* Enhanced Date Picker */}
-          <div className="relative">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowCalendar((v) => !v)}
-              className="min-w-[180px] h-11 bg-white border-gray-300 hover:border-[#1F5A3D] hover:bg-gray-50 transition-colors shadow-sm"
+          {/* Meeting Selector */}
+          <div className="min-w-[260px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Select Meeting
+            </label>
+            <select
+              className="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              value={selectedMeeting?.id || ""}
+              onChange={(e) => {
+                const m = meetings.find((meet) => meet.id === e.target.value);
+                setSelectedMeeting(m || null);
+              }}
             >
-              <Clock className="w-5 h-5 mr-2 text-[#1F5A3D]" />
-              <span className="font-medium text-gray-900">
-                {selectedDate
-                  ? format(selectedDate, "dd/MM/yyyy")
-                  : "Pick a date"}
-              </span>
-              <ChevronDown className="w-4 h-4 ml-2 text-gray-500" />
-            </Button>
-            {showCalendar && (
-              <div className="absolute right-0 z-10 mt-2 bg-white rounded-lg shadow-lg border border-gray-200">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => {
-                    setSelectedDate(date);
-                    setShowCalendar(false);
-                  }}
-                  initialFocus
-                  className="p-3"
-                />
-              </div>
-            )}
+              <option value="">-- Choose a meeting --</option>
+              {meetings.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {`${format(new Date(m.starts_at), "EEE, d MMM yyyy, p")} - ${
+                    m.location
+                  }`}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

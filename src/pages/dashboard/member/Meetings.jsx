@@ -12,6 +12,20 @@ const Meetings = () => {
   const { user } = useSession();
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fullName, setFullName] = useState("");
+
+  useEffect(() => {
+    const fetchFullName = async () => {
+      if (!user?.id) return;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (data && data.full_name) setFullName(data.full_name);
+    };
+    fetchFullName();
+  }, [user]);
 
   useEffect(() => {
     const fetchMeetingsAndAttendance = async () => {
@@ -132,7 +146,7 @@ const Meetings = () => {
     <div className="p-6 space-y-8 bg-gradient-to-br from-white to-gray-100 min-h-screen">
       <div className="mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">
-          Hello {user?.email?.split("@")[0] || "Member"}
+          Hello {fullName || user?.email?.split("@")[0] || "Member"}
         </h2>
         <p className="text-sm text-gray-600 mt-1">
           Your participation history and upcoming meetings

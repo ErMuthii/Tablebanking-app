@@ -92,6 +92,6 @@ export const sidebarConfig = {
   admin: [
     { title: "Home", path: "/dashboard/admin", icon: FiHome },
     { title: "Groups", path: "/dashboard/admin/groups", icon: FiUsers },
-    { title: "Reports", path: "/dashboard/admin/reports", icon: FiBarChart2 },
+    // { title: "Reports", path: "/dashboard/admin/reports", icon: FiBarChart2 },
   ],
 };
