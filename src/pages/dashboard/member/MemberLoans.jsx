@@ -184,7 +184,7 @@ const MemberLoans = () => {
                       <TableHead>Status</TableHead>
                       <TableHead>Requested</TableHead>
                       <TableHead>Due Date</TableHead>
-                      <TableHead>Actions</TableHead>
+                      
                     </TableRow>
                   </TableHeader>
                   <TableBody>

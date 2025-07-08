@@ -87,18 +87,16 @@ const handleSubmit = async (e) => {
       return;
     }
 
-    // Ensure phone number is in the format 2547XXXXXXXX (no +, no spaces)
+    // Format phone number
     let phone = formData.phone.replace(/[^0-9]/g, "");
     if (phone.startsWith("0")) {
       phone = "254" + phone.slice(1);
-    } else if (phone.startsWith("254")) {
-      // already correct
-    } else if (phone.startsWith("7")) {
-      phone = "254" + phone;
     } else if (phone.startsWith("+254")) {
       phone = phone.slice(1);
-    } else {
-      alert("❌ Invalid phone number format. Please use 07XXXXXXXX or 2547XXXXXXXX.");
+    } else if (phone.startsWith("7")) {
+      phone = "254" + phone;
+    } else if (!phone.startsWith("254")) {
+      alert("❌ Invalid phone number format. Use 07XXXXXXXX or 2547XXXXXXXX.");
       setLoadingPayment(false);
       return;
     }
@@ -112,56 +110,56 @@ const handleSubmit = async (e) => {
       transactionDesc: "Monthly group contribution",
     };
 
-    let res;
-    try {
-      res = await fetch("http://localhost:4000/stk-push", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch (networkErr) {
-      alert("❌ Could not reach payment server. Please check your connection or try again later.");
-      setLoadingPayment(false);
-      return;
-    }
+    // Send STK push
+    const res = await fetch("http://localhost:4000/stk-push", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-    let data;
-    try {
-      data = await res.json();
-    } catch (jsonErr) {
-      alert("❌ Invalid response from payment server.");
-      setLoadingPayment(false);
-      return;
-    }
+    const data = await res.json();
 
     if (data.ResponseCode === "0") {
-      const { error: insertError } = await supabase.from("contributions").insert({
-        group_member_id: groupMemberId,
-        amount: payload.amount,
-        type: "monthly",
-        date_contributed: new Date().toISOString().split("T")[0],
-      });
+      alert("📲 Enter your M-Pesa PIN on your phone...");
 
-      if (insertError) {
-        console.error("Insert error:", insertError);
-        alert("❌ Payment went through but failed to save record.");
-      } else {
-        alert("🎉 Contribution recorded successfully!");
+      // Wait and check confirmation via callback or poll (simulate here)
+      const waitForConfirmation = async () => {
+        for (let i = 0; i < 10; i++) {
+          const { data: payments } = await supabase
+            .from("contributions")
+            .select("id")
+            .eq("group_member_id", groupMemberId)
+            .eq("amount", payload.amount)
+            .order("date_contributed", { ascending: false })
+            .limit(1);
+
+          if (payments && payments.length > 0) return true;
+          await new Promise((resolve) => setTimeout(resolve, 3000)); // wait 3s
+        }
+        return false;
+      };
+
+      const confirmed = await waitForConfirmation();
+
+      if (confirmed) {
+        alert("✅ Contribution added successfully!");
         setDialogOpen(false);
         setFormData({ phone: "", amount: "" });
         fetchMyContributions();
+      } else {
+        alert("❌ No PIN was added or payment not confirmed in time.");
       }
     } else {
-      console.error("STK Push backend error:", data);
-      alert("❌ STK Push failed. Check your phone number and try again.");
+      alert("❌ STK Push failed. Check your number and try again.");
     }
   } catch (err) {
     console.error("STK Push error:", err.message);
-    alert("❌ Error sending STK Push. Please try again.");
+    alert("❌ Error initiating payment. Please try again.");
   } finally {
     setLoadingPayment(false);
   }
 };
+
 
 
 
